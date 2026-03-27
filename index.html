@@ -1,0 +1,1797 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>DFS · Topological Sort · Cycle Detection — BCS 309</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Righteous&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#0e0812; --panel:rgba(255,255,255,0.05); --stroke:rgba(255,255,255,0.12);
+      --text:#f0e8ff; --muted:#c9a8e8;
+      --c1:#c084fc; --c2:#f472b6; --c3:#ffd166; --c4:#fb923c; --c5:#ff5c7a; --c6:#e879f9; --c7:#ff6b6b;
+      --col-unvisited:rgba(106,169,255,0.55); --col-gray:rgba(255,209,102,0.85);
+      --col-black:rgba(100,240,200,0.75);     --col-active:rgba(255,92,122,0.90);
+      --edge-tree:#64f0c8; --edge-back:#ff5c7a; --edge-forward:#c77dff;
+      --edge-cross:#ff9f43; --edge-default:rgba(255,255,255,0.20);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:'Space Grotesk',system-ui,-apple-system,sans-serif;
+      background:radial-gradient(1200px 800px at 20% 0%,#2d0a3e 0%,#0e0812 45%,#0a0510 100%);
+      color:var(--text);min-height:100vh}
+    h1{text-align:center;margin:20px 0 4px;font-family:'Righteous',sans-serif;font-size:32px;letter-spacing:.5px}
+    .subtitle{text-align:center;font-size:12px;color:var(--muted);margin:0 0 14px}
+    .wrap{max-width:1280px;margin:0 auto;padding:0 14px 18px;display:grid;grid-template-columns:420px 1fr;gap:14px}
+    @media(max-width:980px){.wrap{grid-template-columns:1fr}}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03));
+      border:1px solid rgba(255,255,255,0.10);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,0.25);overflow:hidden}
+    .card h2{margin:0;padding:14px 14px 10px;font-size:16px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.08)}
+    .controls{padding:12px 14px 14px}
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+    select,input[type="range"],button{width:100%;border-radius:12px;border:1px solid rgba(255,255,255,0.12);
+      background:rgba(0,0,0,0.20);color:var(--text);padding:10px 12px;outline:none;font-size:13px;font-family:inherit}
+    input[type="range"]{padding:10px 0;cursor:pointer}
+    select option{background:#1a0d2e;color:var(--text)}
+    button{cursor:pointer;font-weight:650;background:rgba(192,132,252,0.14);transition:transform .08s ease,background .12s ease}
+    button:hover{background:rgba(192,132,252,0.24)} button:active{transform:scale(0.99)}
+    button.secondary{background:rgba(255,255,255,0.08)} button.secondary:hover{background:rgba(255,255,255,0.13)}
+    button.danger{background:rgba(255,92,122,0.18)} button.danger:hover{background:rgba(255,92,122,0.26)}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+    .btnRow{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}
+    @media(max-width:980px){.btnRow{grid-template-columns:repeat(3,1fr)}}
+    .mb10{margin-bottom:10px}
+    .stat{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.10)}
+    .pill{border-radius:14px;border:1px solid rgba(255,255,255,0.10);background:rgba(0,0,0,0.18);padding:10px 12px;font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:10px}
+    .pill b{color:var(--text);font-weight:750} .pill.wide{grid-column:1/-1}
+    .presets{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+    .preset-btn{padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.15);color:var(--muted);font-size:11.5px;font-weight:600;cursor:pointer;transition:all .15s ease;text-align:center;width:100%}
+    .preset-btn:hover{background:rgba(192,132,252,0.10);color:var(--text)}
+    .preset-btn.active{background:rgba(192,132,252,0.18);border-color:rgba(192,132,252,0.35);color:#fff}
+    .tabBar{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:10px 14px 0}
+    .tab{padding:8px 6px;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.15);color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s ease;text-align:center;width:100%}
+    .tab:hover{background:rgba(192,132,252,0.10);color:var(--text)}
+    .tab.active{background:rgba(192,132,252,0.18);border-color:rgba(192,132,252,0.35);color:#fff}
+    .graph-input{width:100%;background:rgba(0,0,0,0.20);border:1px solid rgba(255,255,255,0.12);border-radius:12px;color:var(--text);font-size:12px;font-family:ui-monospace,'Courier New',monospace;padding:10px 12px;resize:vertical;min-height:80px;outline:none;margin-bottom:8px;line-height:1.5}
+    .graph-input:focus{border-color:rgba(192,132,252,0.4)}
+    .stack-panel{background:rgba(0,0,0,0.18);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:10px 12px;margin-top:10px}
+    .stack-panel h3{margin:0 0 8px;font-size:12px;color:var(--muted);font-weight:700;display:flex;justify-content:space-between;align-items:center}
+    .stack-frames{display:flex;flex-direction:column;gap:4px;min-height:28px}
+    .stack-frame{border:1px solid rgba(255,255,255,0.10);background:rgba(0,0,0,0.18);border-radius:10px;padding:5px 10px;font-size:12px;display:flex;justify-content:space-between;align-items:center;transition:all 180ms ease;animation:slideIn 180ms ease}
+    @keyframes slideIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+    .stack-frame.top{border-color:rgba(255,92,122,0.40);background:rgba(255,92,122,0.08);color:#fff}
+    .stack-frame small{color:var(--muted);font-size:11px;font-weight:600}
+    .topo-strip{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;min-height:28px;align-items:center}
+    .topo-node{padding:3px 9px;border-radius:8px;font-size:12px;font-weight:700;border:1px solid rgba(100,240,200,0.30);background:rgba(100,240,200,0.10);color:var(--c2);animation:popIn 220ms ease}
+    @keyframes popIn{from{opacity:0;transform:scale(0.7)}to{opacity:1;transform:scale(1)}}
+    .topo-arrow{color:var(--muted);font-size:11px}
+    .cycle-alert{display:none;margin-top:8px;padding:8px 12px;border-radius:10px;background:rgba(255,92,122,0.12);border:1px solid rgba(255,92,122,0.30);color:var(--c5);font-size:12px;font-weight:600;animation:fadeIn 250ms ease}
+    .cycle-alert.show{display:block}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+    /* ══════════════════════════════════════
+       PHASE 2: PSEUDOCODE WITH LINE NUMBERS
+    ══════════════════════════════════════ */
+    .pseudo-wrap{position:relative;background:rgba(0,0,0,0.28);border:1px solid rgba(255,255,255,0.10);border-radius:14px;overflow:hidden;margin-top:10px}
+    .pseudo-header{display:flex;align-items:center;justify-content:space-between;padding:7px 12px 6px;background:rgba(255,255,255,0.02);border-bottom:1px solid rgba(255,255,255,0.06);font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.06em}
+    .pseudo-mode-tag{padding:2px 8px;border-radius:5px;background:rgba(192,132,252,0.15);color:var(--c1);font-size:10px;font-weight:700;letter-spacing:.04em}
+    .pseudo-hint{font-size:10px;font-weight:400;color:rgba(183,192,255,0.45)}
+    .pseudo-scroll{max-height:310px;overflow-y:auto;overflow-x:hidden;scroll-behavior:smooth}
+    .pseudo-scroll::-webkit-scrollbar{width:4px}
+    .pseudo-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.10);border-radius:2px}
+    .code-row{display:flex;align-items:stretch;min-height:21px;position:relative;transition:background 150ms ease;cursor:default}
+    .code-row:hover{background:rgba(255,255,255,0.025)}
+    .code-row.active{background:rgba(255,209,102,0.14)!important;border-left:3px solid rgba(255,209,102,0.75)}
+    .code-row.active .ln{color:rgba(255,209,102,0.80)}
+    .code-row.active .lc{color:#fff}
+    .code-row.visited{background:rgba(100,240,200,0.03)}
+    .ln{min-width:30px;padding:3px 7px 3px 8px;text-align:right;font-size:10px;color:rgba(183,192,255,0.22);user-select:none;flex-shrink:0;line-height:15px;padding-top:4px;border-right:1px solid rgba(255,255,255,0.05);background:rgba(0,0,0,0.12);font-family:ui-monospace,monospace;transition:color 150ms ease}
+    .lc{padding:3px 8px 3px 10px;color:rgba(232,236,255,0.82);white-space:pre;flex:1;line-height:15px;padding-top:4px;font-size:11.5px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Courier New',monospace;transition:color 150ms ease}
+    .tt-btn{width:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 150ms;cursor:help;color:rgba(106,169,255,0.50);font-size:10px;padding-right:5px}
+    .code-row:hover .tt-btn{opacity:1}
+    .code-row.active .tt-btn{opacity:1;color:rgba(255,209,102,0.70)}
+    .exec-badge{position:absolute;right:22px;top:50%;transform:translateY(-50%);font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;background:rgba(255,209,102,0.18);color:rgba(255,209,102,0.85);letter-spacing:.05em;pointer-events:none}
+
+    /* ── Floating tooltip ── */
+    .tt-float{position:fixed;z-index:9999;max-width:270px;padding:10px 13px;background:#0d1526;border:1px solid rgba(106,169,255,0.28);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,0.55);font-size:12px;line-height:1.55;color:var(--text);pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity 150ms ease,transform 150ms ease}
+    .tt-float.show{opacity:1;transform:translateY(0)}
+    .tt-num{font-size:10px;color:var(--c3);font-weight:700;margin-bottom:4px;letter-spacing:.04em}
+    .tt-code{font-size:10.5px;color:var(--c3);background:rgba(255,209,102,0.09);border-radius:4px;padding:2px 7px;margin-bottom:6px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:ui-monospace,monospace}
+    .tt-body{color:var(--muted);font-size:11.5px}
+    .tt-body b{color:var(--text)} .tt-body code{font-family:ui-monospace,monospace;background:rgba(255,255,255,0.07);border-radius:3px;padding:1px 4px;font-size:11px;color:var(--c2)}
+
+    /* ══════════════════════════════════════
+       PHASE 2: STEP EXPLANATION BOX
+    ══════════════════════════════════════ */
+    .explain-wrap{margin-top:10px;border-radius:14px;border:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.18);overflow:hidden}
+    .explain-hdr{display:flex;align-items:center;gap:8px;padding:7px 12px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.06);font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.03em}
+    .expl-step{font-size:10px;padding:2px 8px;border-radius:5px;background:rgba(192,132,252,0.14);color:var(--c1);font-weight:700}
+    .expl-mode{margin-left:auto;font-size:10px;padding:2px 8px;border-radius:5px;background:rgba(244,114,182,0.12);color:var(--c2);font-weight:700;letter-spacing:.04em}
+    .explain-body{padding:10px 13px 10px;font-size:12.5px;line-height:1.65;color:var(--muted);min-height:50px;transition:background 200ms ease}
+    .explain-body.flash{animation:explFlash 300ms ease}
+    @keyframes explFlash{0%{background:rgba(255,209,102,0.08)}100%{background:transparent}}
+    .explain-body b{color:var(--text)}
+    .explain-body .v{font-family:ui-monospace,monospace;font-size:11.5px;background:rgba(255,255,255,0.08);border-radius:4px;padding:1px 6px;color:var(--c3);font-weight:700}
+    .explain-body .nw{color:var(--c1);font-weight:700}
+    .explain-body .ng{color:var(--c3);font-weight:700}
+    .explain-body .nb{color:var(--c2);font-weight:700}
+    .explain-body .na{color:var(--c5);font-weight:700}
+    .explain-body .et-tree{color:var(--edge-tree);font-weight:700}
+    .explain-body .et-back{color:var(--edge-back);font-weight:700}
+    .explain-body .et-forward{color:var(--edge-forward);font-weight:700}
+    .explain-body .et-cross{color:var(--edge-cross);font-weight:700}
+    .explain-body .why{display:block;margin-top:6px;font-size:11.5px;color:rgba(183,192,255,0.48);border-left:2px solid rgba(183,192,255,0.18);padding-left:8px}
+    .explain-chips{display:flex;flex-wrap:wrap;gap:5px;padding:5px 13px 10px;border-top:1px solid rgba(255,255,255,0.04)}
+    .chip{font-family:ui-monospace,monospace;font-size:11px;padding:2px 9px;border-radius:7px;border:1px solid rgba(255,255,255,0.09);background:rgba(0,0,0,0.20);color:var(--muted);display:flex;align-items:center;gap:5px}
+    .chip b{color:var(--text);font-size:12px}
+    .chip.cd{border-color:rgba(255,209,102,0.28);background:rgba(255,209,102,0.07);color:var(--c3)}
+    .chip.cf{border-color:rgba(100,240,200,0.28);background:rgba(100,240,200,0.07);color:var(--c2)}
+    .chip.ce{border-color:rgba(255,92,122,0.22);background:rgba(255,92,122,0.05);color:var(--c5)}
+
+    .hint{font-size:12px;color:var(--muted);padding:0 14px 14px}
+
+    /* ── Viz ── */
+    .viz{padding:14px;display:flex;flex-direction:column;gap:10px}
+    .legend{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--muted);align-items:center}
+    .dot{width:11px;height:11px;border-radius:50%;display:inline-block;margin-right:5px;border:1px solid rgba(255,255,255,0.18)}
+    .ledge{display:inline-block;width:22px;height:3px;border-radius:2px;margin-right:5px;vertical-align:middle}
+    #graphSvg{width:100%;height:480px;background:rgba(0,0,0,0.18);border:1px solid rgba(255,255,255,0.10);border-radius:16px;display:block}
+    .gnode-circle{transition:fill 200ms ease,stroke 200ms ease,stroke-width 200ms ease}
+    .gnode-text{transition:fill 200ms ease;pointer-events:none;user-select:none}
+    .gedge-line{transition:stroke 250ms ease,stroke-width 200ms ease}
+    .gedge-label{transition:fill 200ms ease;pointer-events:none;user-select:none}
+    #parenSvg{width:100%;height:200px;background:rgba(0,0,0,0.18);border:1px solid rgba(255,255,255,0.10);border-radius:14px;display:block}
+    .hist-wrap{background:rgba(0,0,0,0.18);border:1px solid rgba(255,255,255,0.08);border-radius:14px;overflow:hidden;max-height:180px;overflow-y:auto}
+    .hist-wrap::-webkit-scrollbar{width:5px} .hist-wrap::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:3px}
+    .hist-table{width:100%;border-collapse:collapse;font-size:11px;font-family:ui-monospace,monospace}
+    .hist-table th{padding:6px 10px;text-align:left;color:var(--muted);font-weight:600;font-size:10px;border-bottom:1px solid rgba(255,255,255,0.08);position:sticky;top:0;background:rgba(10,12,24,0.95)}
+    .hist-table td{padding:4px 10px;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--text)}
+    .hist-table tr{cursor:pointer;transition:background 120ms}
+    .hist-table tr:hover td{background:rgba(106,169,255,0.06)}
+    .hist-table tr.cur td{background:rgba(106,169,255,0.12)}
+    .et{font-weight:700} .et-tree{color:var(--c2)} .et-back{color:var(--c5)} .et-forward{color:var(--c6)} .et-cross{color:var(--c4)}
+    ::-webkit-scrollbar{width:6px} ::-webkit-scrollbar-track{background:transparent} ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:3px}
+
+    /* ── Right-panel tab views ── */
+    .viz-panel{display:none;padding:0}
+    .viz-panel.active{display:block}
+    .viz-h3{margin:0 0 8px;font-size:13px;font-weight:700;color:var(--muted)}
+    .module-banner{padding:11px 14px;margin:12px 14px 0;border-radius:12px;font-size:12.5px;line-height:1.65;border-left:3px solid}
+    .module-banner.blue{border-color:var(--c1);background:rgba(192,132,252,0.07);color:var(--text)}
+    .module-banner.green{border-color:var(--c2);background:rgba(244,114,182,0.07);color:var(--text)}
+    .module-banner.purple{border-color:var(--c6);background:rgba(232,121,249,0.07);color:var(--text)}
+    .module-banner b{color:var(--text)}
+    .cx-table{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0}
+    .cx-table th{padding:7px 11px;text-align:left;color:var(--muted);font-weight:600;font-size:11px;border-bottom:1px solid rgba(255,255,255,0.10);background:rgba(0,0,0,0.18)}
+    .cx-table td{padding:7px 11px;border-bottom:1px solid rgba(255,255,255,0.05);color:var(--text)}
+    .cx-table tr:hover td{background:rgba(106,169,255,0.04)}
+    .cx-table .good{color:var(--c2);font-weight:700} .cx-table .ok{color:var(--c3);font-weight:700}
+    .cx-table .bad{color:var(--c5);font-weight:700}  .cx-table .hi{color:var(--c1);font-weight:700}
+    .chart-box{background:rgba(0,0,0,0.18);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px;margin:8px 0}
+    .chart-controls{display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+    .chart-controls input[type=range]{width:120px;padding:5px 0}
+    .chart-nval{font-family:ui-monospace,monospace;color:var(--c1);font-weight:700}
+    .chart-leg{display:flex;align-items:center;gap:5px}
+    .chart-leg-line{width:18px;height:2px;border-radius:1px;display:inline-block}
+    .wc-row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+    .wc-btn{padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.10);background:rgba(0,0,0,0.18);color:var(--muted);font-size:11.5px;font-weight:600;cursor:pointer;transition:all .15s;text-align:center;line-height:1.4}
+    .wc-btn:hover{background:rgba(106,169,255,0.12);color:var(--text);border-color:rgba(106,169,255,0.25)}
+    .wc-btn.active{background:rgba(255,92,122,0.14);border-color:rgba(255,92,122,0.30);color:var(--c5)}
+    .wc-btn small{display:block;font-size:10px;font-weight:400;color:var(--muted)}
+    .insight-box{padding:11px 14px;border-radius:12px;margin:8px 0;font-size:12.5px;line-height:1.65;border-left:3px solid}
+    .insight-box.blue{border-color:var(--c1);background:rgba(192,132,252,0.07)}
+    .insight-box.green{border-color:var(--c2);background:rgba(244,114,182,0.07)}
+    .insight-box.yellow{border-color:var(--c3);background:rgba(255,209,102,0.07)}
+    .insight-box b{color:var(--text)}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0}
+    .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:10px 0}
+    @media(max-width:980px){.grid2,.grid3{grid-template-columns:1fr}}
+    .mini-card{background:rgba(0,0,0,0.18);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px}
+    .mini-card h4{margin:0 0 6px;font-size:12.5px;font-weight:700;color:var(--c1)}
+    .mini-card p{font-size:12px;color:var(--muted);line-height:1.65;margin:0}
+    .topo-anim-wrap{background:rgba(0,0,0,0.18);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px;margin:8px 0}
+    .topo-anim-wrap h4{margin:0 0 6px;font-size:12.5px;font-weight:700;color:var(--muted)}
+    .topo-anim-btn{padding:7px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.10);background:rgba(106,169,255,0.14);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;margin-right:6px}
+    .topo-anim-btn:hover{background:rgba(106,169,255,0.22)}
+    .impact-table{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0}
+    .impact-table th{padding:7px 11px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.18)}
+    .impact-table td{padding:7px 11px;border-bottom:1px solid rgba(255,255,255,0.05);color:var(--text);font-size:12px;line-height:1.5}
+    .impact-table tr:hover td{background:rgba(255,255,255,0.02)}
+    .tag{display:inline-block;padding:1px 7px;border-radius:5px;font-size:10px;font-weight:700}
+    .tag-good{background:rgba(100,240,200,0.15);color:var(--c2)}
+    .tag-bad{background:rgba(255,92,122,0.15);color:var(--c5)}
+    .tag-warn{background:rgba(255,209,102,0.15);color:var(--c3)}
+    .paradigm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:10px 0}
+    @media(max-width:980px){.paradigm-grid{grid-template-columns:1fr}}
+    .paradigm-card{border-radius:12px;padding:13px;border:2px solid transparent}
+    .paradigm-card.active-p{border-color:rgba(100,240,200,0.35);background:rgba(100,240,200,0.05)}
+    .paradigm-card.wrong-p{border-color:rgba(255,92,122,0.25);background:rgba(255,92,122,0.04)}
+    .paradigm-card h4{margin:0 0 6px;font-size:12.5px;font-weight:700}
+    .paradigm-card p{font-size:12px;color:var(--muted);line-height:1.6;margin:0}
+    .paradigm-card code{font-family:ui-monospace,monospace;font-size:11px;background:rgba(255,255,255,0.07);border-radius:3px;padding:1px 4px;color:var(--c2)}
+    .p-verdict{display:inline-block;margin-top:8px;padding:2px 9px;border-radius:6px;font-size:10px;font-weight:700}
+    .dp-table-wrap{overflow-x:auto;margin:8px 0}
+    .dp-tbl{border-collapse:collapse;font-size:12px;font-family:ui-monospace,monospace;min-width:100%}
+    .dp-tbl th{padding:6px 12px;text-align:center;font-size:11px;color:var(--muted);font-weight:600;border:1px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.22)}
+    .dp-tbl td{padding:6px 12px;text-align:center;border:1px solid rgba(255,255,255,0.06);color:var(--text);transition:background .25s,color .25s}
+    .dp-tbl td.dp-inf{color:rgba(255,255,255,0.18)}
+    .dp-tbl td.dp-src{background:rgba(106,169,255,0.15);color:var(--c1);font-weight:700}
+    .dp-tbl td.dp-active{background:rgba(255,209,102,0.18);color:var(--c3);font-weight:700}
+    .dp-tbl td.dp-done{background:rgba(100,240,200,0.12);color:var(--c2);font-weight:700}
+    .dp-tbl td.dp-best{background:rgba(199,125,255,0.18);color:var(--c6);font-weight:700}
+    .dp-step-log{background:rgba(0,0,0,0.18);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:9px 13px;font-size:12px;color:var(--muted);min-height:38px;line-height:1.6;margin-top:8px}
+    .dp-step-log b{color:var(--text)}
+    .dp-ctrl-row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center}
+    .dp-btn{padding:7px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.10);background:rgba(106,169,255,0.14);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+    .dp-btn:hover{background:rgba(106,169,255,0.22)}
+    .dp-btn.danger{background:rgba(255,92,122,0.12);border-color:rgba(255,92,122,0.18);color:var(--c5)}
+    .dp-btn.danger:hover{background:rgba(255,92,122,0.20)}
+  </style>
+</head>
+<body>
+
+<!-- Single floating tooltip -->
+<div class="tt-float" id="ttFloat">
+  <div class="tt-num"  id="ttNum"></div>
+  <code class="tt-code" id="ttCode"></code>
+  <div class="tt-body" id="ttBody"></div>
+</div>
+
+<h1><span style="color:#c084fc">DFS</span><span style="color:rgba(240,232,255,0.35)"> · </span><span style="color:#f472b6">Topological Sort</span><span style="color:rgba(240,232,255,0.35)"> · </span><span style="color:#e879f9">Cycle Detection</span></h1>
+<p class="subtitle">Nuha Aburamadan &nbsp;|&nbsp; Interactive DFS Step-by-Step Visualizer</p>
+
+<div class="wrap">
+  <!-- ═════════════ LEFT PANEL ═════════════ -->
+  <div class="card">
+    <h2>Controls</h2>
+    <div class="tabBar">
+      <button class="tab active" onclick="setMode('dfs',this)">DFS</button>
+      <button class="tab"        onclick="setMode('topo',this)">Topo Sort</button>
+      <button class="tab"        onclick="setMode('cycle',this)">Cycle Det.</button>
+      <button class="tab"        onclick="setMode('dp',this)">Longest Path</button>
+    </div>
+    <div class="controls">
+      <label>Preset Graphs</label>
+      <div class="presets">
+        <button class="preset-btn active" onclick="loadPreset('dag',this)">Simple DAG<br><small style="font-weight:400;color:var(--muted)">No cycles</small></button>
+        <button class="preset-btn"        onclick="loadPreset('cycle',this)">Has Cycle<br><small style="font-weight:400;color:var(--muted)">Back edge</small></button>
+        <button class="preset-btn"        onclick="loadPreset('longest',this)">Longest Path<br><small style="font-weight:400;color:var(--muted)">DP on DAG</small></button>
+        <button class="preset-btn"        onclick="loadPreset('disc',this)">Disconnected<br><small style="font-weight:400;color:var(--muted)">Multi-comp.</small></button>
+      </div>
+      <label>Custom Graph (adjacency list)</label>
+      <textarea class="graph-input" id="graphInput">A: B C
+B: D E
+C: F
+D:
+E: F
+F:</textarea>
+      <button class="secondary mb10" onclick="loadCustom()">Load Custom Graph</button>
+      <div class="row">
+        <div>
+          <label>Speed: <span id="speedLabel">1.0×</span></label>
+          <input type="range" id="speed" min="0.25" max="4" step="0.25" value="1" oninput="updateSpeed(this.value)"/>
+        </div>
+        <div>
+          <label>Start Node</label>
+          <select id="startNode"></select>
+        </div>
+      </div>
+      <div class="btnRow" style="grid-template-columns:repeat(6,1fr)">
+        <button onclick="buildSteps()">Build Steps</button>
+        <button onclick="stepBack()" class="secondary">◀ Back</button>
+        <button onclick="stepOnce()" class="secondary">Step ▶</button>
+        <button onclick="playAnim()">Play</button>
+        <button onclick="pauseAnim()" class="secondary">Pause</button>
+        <button onclick="resetAll()" class="danger">Reset</button>
+      </div>
+      <div class="stat">
+        <div class="pill"><span>Step</span><b id="stepCount">0 / 0</b></div>
+        <div class="pill"><span>Status</span><b id="statusEl">Idle</b></div>
+        <div class="pill"><span>Visited</span><b id="statVisited">0</b></div>
+        <div class="pill"><span>Edges Exp.</span><b id="statEdges">0</b></div>
+        <div class="pill"><span>Back Edges</span><b id="statBack">0</b></div>
+        <div class="pill"><span>Timer</span><b id="statTime">0</b></div>
+      </div>
+    </div>
+
+    <!-- Stack + Topo -->
+    <div style="padding:0 14px 10px">
+      <div class="stack-panel">
+        <h3>DFS Call Stack <span id="stackDepthLbl" style="color:var(--c1);font-size:11px;font-weight:700">depth: 0</span></h3>
+        <div class="stack-frames" id="stackFrames"><div style="font-size:11px;color:var(--muted);text-align:center;padding:4px 0">Stack is empty</div></div>
+      </div>
+      <div style="margin-top:10px">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Topological Order (finish-time desc.)</div>
+        <div class="topo-strip" id="topoStrip"><span style="font-size:11px;color:var(--muted)">—</span></div>
+      </div>
+      <div class="cycle-alert" id="cycleAlert">⚠ Cycle detected! Back edge found — no valid topological order exists.</div>
+    </div>
+
+    <!-- ════════════════════════════
+         PHASE 2 — PSEUDOCODE PANEL
+    ════════════════════════════ -->
+    <div style="padding:0 14px 4px">
+      <label style="margin-bottom:4px">Pseudocode</label>
+      <div class="pseudo-wrap">
+        <div class="pseudo-header">
+          <span>PSEUDOCODE</span>
+          <span class="pseudo-hint">hover line for tooltip · active line auto-scrolls</span>
+          <span class="pseudo-mode-tag" id="pseudoModeTag">DFS-VISIT</span>
+        </div>
+        <div class="pseudo-scroll" id="pseudoScroll"></div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════
+         PHASE 2 — EXPLAIN BOX
+    ════════════════════════════ -->
+    <div style="padding:0 14px 14px">
+      <div class="explain-wrap">
+        <div class="explain-hdr">
+          <span>🎓 Step Explanation</span>
+          <span class="expl-step" id="explStep">—</span>
+          <span class="expl-mode" id="explMode">DFS</span>
+        </div>
+        <div class="explain-body" id="explBody">
+          Click <b>Build Steps</b>, then <b>Step</b> or <b>Play</b> to see concrete,
+          line-by-line explanations — including actual node names, discovery times, and edge classifications.
+        </div>
+        <div class="explain-chips" id="explChips"></div>
+      </div>
+    </div>
+
+    <div class="hint">Tip: Hover any pseudocode line for a detailed tooltip. Click Build Steps then Step to teach line-by-line.</div>
+  </div>
+
+  <!-- ═════════════ RIGHT PANEL ═════════════ -->
+  <div class="card">
+    <h2>Interactive Algorithm Explorer</h2>
+
+    <!-- Right-panel tab bar -->
+    <div class="tabBar" style="grid-template-columns:repeat(4,1fr);padding:10px 14px 0">
+      <button class="tab active" onclick="switchVizTab('graph',this)">Graph</button>
+      <button class="tab"        onclick="switchVizTab('complexity',this)">Complexity</button>
+      <button class="tab"        onclick="switchVizTab('sorting',this)">Sorting Role</button>
+      <button class="tab"        onclick="switchVizTab('paradigm',this)">DP Paradigm</button>
+    </div>
+
+    <!-- ── TAB 1: Graph ── -->
+    <div class="viz-panel active" id="vp-graph">
+      <div class="viz">
+        <div class="legend">
+          <span><span class="dot" style="background:var(--col-unvisited)"></span>Blue (unvisited)</span>
+          <span><span class="dot" style="background:var(--col-gray)"></span>Yellow (in stack)</span>
+          <span><span class="dot" style="background:var(--col-black)"></span>Green (finished)</span>
+          <span><span class="dot" style="background:var(--col-active)"></span>Red (active)</span>
+          <span><span class="ledge" style="background:var(--edge-tree)"></span>Tree</span>
+          <span><span class="ledge" style="background:var(--edge-back)"></span>Back</span>
+          <span><span class="ledge" style="background:var(--edge-forward)"></span>Forward</span>
+          <span><span class="ledge" style="background:var(--edge-cross)"></span>Cross</span>
+        </div>
+        <svg id="graphSvg" viewBox="0 0 800 480" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <marker id="arr-default" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="rgba(255,255,255,0.20)"/></marker>
+            <marker id="arr-tree"    markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#64f0c8"/></marker>
+            <marker id="arr-back"    markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#ff5c7a"/></marker>
+            <marker id="arr-forward" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#c77dff"/></marker>
+            <marker id="arr-cross"   markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#ff9f43"/></marker>
+            <marker id="arr-active"  markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#ff5c7a"/></marker>
+          </defs>
+          <g id="edgesG"></g><g id="nodesG"></g>
+        </svg>
+        <div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600">Parenthesis Theorem — Discovery / Finish Time Intervals</div>
+          <svg id="parenSvg" viewBox="0 0 800 200" preserveAspectRatio="xMidYMid meet"></svg>
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600">Step History <span id="histCount" style="font-weight:400">(click row to jump)</span></div>
+          <div class="hist-wrap">
+            <table class="hist-table">
+              <thead><tr><th>#</th><th>Action</th><th>Node</th><th>Edge</th><th>d[v]</th><th>f[v]</th><th>Detail</th></tr></thead>
+              <tbody id="histBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB 2: Complexity ── -->
+    <div class="viz-panel" id="vp-complexity">
+      <div class="viz">
+        <div class="module-banner blue">
+          DFS runs in <b>Θ(V+E)</b> time — a tight bound. Every vertex is discovered once and every edge examined once. The chart below shows how DFS compares to BFS and a naive approach as graph size grows.
+        </div>
+
+        <h3 class="viz-h3">Time &amp; Space Complexity</h3>
+        <table class="cx-table">
+          <thead><tr><th>Case</th><th>Time</th><th>Space</th><th>Graph Shape</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td class="hi">Best Case</td><td class="good">Θ(V+E)</td><td class="good">O(1) stack</td><td>Single vertex, no edges</td><td>DFS discovers 1 vertex, examines 0 edges. Minimum possible work — but still visits every vertex and edge once by definition.</td></tr>
+            <tr><td class="hi">Average Case</td><td class="good">Θ(V+E)</td><td class="good">O(V)</td><td>Sparse random graph (E ≈ 1.5V)</td><td>Each vertex colored once = Θ(V). Each edge examined once when its source is yellow = Θ(E). Stack depth proportional to average path length.</td></tr>
+            <tr><td class="hi">Worst Case</td><td class="ok">Θ(V²)</td><td class="ok">O(V)</td><td>Dense graph (E = V²)</td><td>DFS is still Θ(V+E) — but E = V² on a complete graph, so cost becomes Θ(V²). Stack reaches depth V on a path graph. Load the worst-case demos below to see both.</td></tr>
+            <tr style="border-top:1px solid rgba(255,255,255,0.10)"><td class="hi">Topo Sort</td><td class="good">Θ(V+E)</td><td class="good">O(V)</td><td>Any DAG</td><td>Same DFS cost + O(V) output list. Prepend on finish — no extra pass needed.</td></tr>
+            <tr><td class="hi">Longest Path DP</td><td class="good">O(V+E)</td><td class="good">O(V)</td><td>Any DAG</td><td>DFS topo sort O(V+E) + DP relaxation O(V+E) = O(V+E) total.</td></tr>
+          </tbody>
+        </table>
+
+        <h3 class="viz-h3" style="margin-top:14px">Growth Curve — Operations vs Input Size</h3>
+        <div class="chart-box">
+          <svg id="growthSvg" style="width:100%;height:210px;display:block"></svg>
+          <div class="chart-controls">
+            <span>Max V: <span class="chart-nval" id="growthNVal">20</span></span>
+            <input type="range" id="growthSlider" min="4" max="60" value="20" oninput="updateGrowthChart(this.value)"/>
+            <span class="chart-leg"><span class="chart-leg-line" style="background:var(--c2)"></span>DFS actual</span>
+            <span class="chart-leg"><span class="chart-leg-line" style="background:var(--c1)"></span>BFS</span>
+            <span class="chart-leg"><span class="chart-leg-line" style="background:var(--c5)"></span>Naive O(V²)</span>
+            <span class="chart-leg"><span class="chart-leg-line" style="background:rgba(255,255,255,0.35);border-top:2px dashed rgba(255,255,255,0.35);height:0;margin-top:1px"></span>O(V+E) theory</span>
+          </div>
+        </div>
+
+        <h3 class="viz-h3" style="margin-top:14px">⚠ Worst-Case Demos</h3>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:8px">Load a worst-case graph into the main visualizer and run DFS to see the cost in action.</p>
+        <div class="wc-row">
+          <button class="wc-btn" onclick="loadWCPreset('path')">Path Graph<br><small>max stack depth</small></button>
+          <button class="wc-btn" onclick="loadWCPreset('dense')">Dense Graph<br><small>max edge count</small></button>
+          <button class="wc-btn" onclick="loadWCPreset('complete')">Complete DAG<br><small>all edge types</small></button>
+        </div>
+        <div id="wcExplain" class="insight-box yellow" style="display:none;margin-top:8px"></div>
+
+        <h3 class="viz-h3" style="margin-top:14px">Algorithm Comparison</h3>
+        <table class="cx-table">
+          <thead><tr><th>Algorithm</th><th>Time</th><th>Topo Sort?</th><th>Cycle Det.?</th><th>d/f Times?</th></tr></thead>
+          <tbody>
+            <tr><td class="hi">DFS</td><td class="good">Θ(V+E)</td><td class="good">✓ Yes</td><td class="good">✓ Yes</td><td class="good">✓ Yes</td></tr>
+            <tr><td>BFS</td><td class="good">Θ(V+E)</td><td class="bad">✗ No</td><td class="ok">△ Undirected</td><td class="bad">✗ No</td></tr>
+            <tr><td>Kahn's</td><td class="good">O(V+E)</td><td class="good">✓ Yes</td><td class="good">✓ Yes</td><td class="bad">✗ No</td></tr>
+            <tr><td>Naive Topo</td><td class="bad">O(V²)</td><td class="ok">△ Slow</td><td class="bad">✗ No</td><td class="bad">✗ No</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── TAB 3: Sorting Role ── -->
+    <div class="viz-panel" id="vp-sorting">
+      <div class="viz">
+        <div class="module-banner green">
+          DFS is both a <b>search</b> (explores depth-first) and a <b>sort</b> (outputs vertices in topological order by finish time). The animation below shows the sort step happening live.
+        </div>
+
+        <div class="grid2">
+          <div class="mini-card">
+            <h4>🔍 Searching Role</h4>
+            <p>DFS searches the graph for reachable vertices, diving as deep as possible before backtracking. It discovers all vertices reachable from each root and classifies every edge it encounters.</p>
+          </div>
+          <div class="mini-card">
+            <h4>📋 Sorting Role</h4>
+            <p>DFS produces a <b>topological sort</b> as a by-product: each vertex is prepended to the result list when it finishes. The result is sorted in <b>decreasing finish-time order</b> — valid for all DAGs.</p>
+          </div>
+        </div>
+
+        <h3 class="viz-h3">Topological Sort — Watch the Sort Step Live</h3>
+        <div class="topo-anim-wrap">
+          <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Each vertex is <b>prepended</b> to the result when it finishes (turns GREEN). Vertices with higher finish times appear earlier in the list.</p>
+          <svg id="topoAnimSvg" viewBox="0 0 800 130" preserveAspectRatio="xMidYMid meet" style="width:100%;height:130px;display:block"></svg>
+          <div style="margin-top:8px">
+            <button class="topo-anim-btn" onclick="runTopoAnim()">▶ Animate</button>
+            <button class="topo-anim-btn" onclick="resetTopoAnim()" style="background:rgba(255,255,255,0.08)">↺ Reset</button>
+          </div>
+          <div id="topoAnimLog" style="margin-top:8px;font-size:12px;color:var(--muted);min-height:24px"></div>
+        </div>
+
+        <h3 class="viz-h3" style="margin-top:14px">⚠ What Goes Wrong Without Correct Sorting?</h3>
+        <table class="impact-table">
+          <thead><tr><th>Scenario</th><th>Result</th><th>Verdict</th></tr></thead>
+          <tbody>
+            <tr><td><b>Remove topo sort</b> — process in arbitrary order</td><td>DP relaxes before predecessors are final → wrong longest path</td><td><span class="tag tag-bad">WRONG</span></td></tr>
+            <tr><td><b>Use BFS order</b> instead of DFS finish order</td><td>Vertices processed before all predecessors — DP invalid</td><td><span class="tag tag-bad">WRONG</span></td></tr>
+            <tr><td><b>Reverse the topo order</b></td><td>Successors before predecessors — all dist[] stay −∞</td><td><span class="tag tag-bad">WRONG</span></td></tr>
+            <tr><td><b>Sort by discovery time d[u]</b></td><td>Differs from f[u] for forward/cross edges — partial errors</td><td><span class="tag tag-warn">SOMETIMES WRONG</span></td></tr>
+            <tr><td><b>DFS finish-time sort (correct)</b></td><td>Every predecessor processed first — DP always correct</td><td><span class="tag tag-good">CORRECT ✓</span></td></tr>
+          </tbody>
+        </table>
+
+        <div class="insight-box green" style="margin-top:10px">
+          <b>Why f[u] is the right sort key:</b> For any edge (u→v) in a DAG, DFS guarantees f[v] &lt; f[u]. Sorting by <em>decreasing</em> f ensures u is processed before v for every edge — exactly what DP needs.
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB 4: DP Paradigm ── -->
+    <div class="viz-panel" id="vp-paradigm">
+      <div class="viz">
+        <div class="module-banner purple">
+          The Longest Path on a DAG uses <b>Dynamic Programming</b> — enabled by the topological sort that DFS produces. DP works here because the DAG structure eliminates cycles, guaranteeing subproblems can be solved in order.
+        </div>
+
+        <div class="paradigm-grid">
+          <div class="paradigm-card active-p">
+            <h4 style="color:var(--c2)">✓ Dynamic Programming</h4>
+            <p>Process in topo order. For each edge (u→v): <code>dist[v] = max(dist[v], dist[u]+1)</code>. Each subproblem solved once. Predecessors always final before we process a vertex.</p>
+            <span class="p-verdict" style="background:rgba(100,240,200,0.15);color:var(--c2)">CORRECT — O(V+E)</span>
+          </div>
+          <div class="paradigm-card wrong-p">
+            <h4 style="color:var(--c5)">✗ Greedy</h4>
+            <p>Always pick the longest outgoing edge. <b>Counterexample:</b> S→A (w=10), A→T (w=1) vs S→B (w=1), B→T (w=100). Greedy picks S→A but misses S→B→T (total=101).</p>
+            <span class="p-verdict" style="background:rgba(255,92,122,0.15);color:var(--c5)">WRONG — misses global optimum</span>
+          </div>
+          <div class="paradigm-card wrong-p">
+            <h4 style="color:var(--c5)">✗ Divide &amp; Conquer</h4>
+            <p>Split graph in half, solve each side, combine. The longest path may cross the cut boundary — subproblems are NOT independent. D&amp;C gives wrong results.</p>
+            <span class="p-verdict" style="background:rgba(255,92,122,0.15);color:var(--c5)">WRONG — subproblems overlap</span>
+          </div>
+        </div>
+
+        <h3 class="viz-h3" style="margin-top:14px">Interactive DP Table — Longest Path Step by Step</h3>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:8px">Graph: S→A, S→B, A→C, B→C, B→D, C→T, D→T. Watch dist[ ] fill up in topological order. <b style="color:var(--c3)">💡 Switch to the Graph tab, load the Longest Path preset, and run — this table updates live!</b></p>
+        <div class="dp-table-wrap">
+          <table class="dp-tbl" id="dpTbl">
+            <thead id="dpTblHead"></thead>
+            <tbody id="dpTblBody"></tbody>
+          </table>
+        </div>
+        <div class="dp-step-log" id="dpStepLog">Click <b>Next Step</b> to watch the DP table fill up.</div>
+        <div class="dp-ctrl-row">
+          <button class="dp-btn" onclick="dpNextStep()">Next Step ▶</button>
+          <button class="dp-btn" onclick="dpPlayAll()">▶▶ Play All</button>
+          <button class="dp-btn danger" onclick="dpReset()">↺ Reset</button>
+          <span id="dpStepCounter" style="font-size:12px;color:var(--muted);padding:8px 4px">Step 0 / 0</span>
+        </div>
+
+        <div class="grid3" style="margin-top:14px">
+          <div class="mini-card">
+            <h4>① Optimal Substructure</h4>
+            <p>longest(s→v) = max over all u→v of (longest(s→u) + w(u,v)). The optimal solution is built from optimal sub-solutions.</p>
+          </div>
+          <div class="mini-card">
+            <h4>② Overlapping Subproblems</h4>
+            <p>dist[C] is updated from both A and B — watch for the <b style="color:var(--c6)">purple* cells</b> in the table above. Without memoization we'd recompute paths to C multiple times — exponential cost. DP stores each answer once and reuses it.</p>
+          </div>
+          <div class="mini-card">
+            <h4>③ Topo Order Guarantee</h4>
+            <p>Processing in topo order ensures dist[u] is <b>already final</b> when we process edge (u→v) — the core DP correctness property.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /right card -->
+</div><!-- /wrap -->
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  PRESETS
+// ═══════════════════════════════════════════════════════════
+const PRESETS = {
+  dag:    {adj:{A:['B','C'],B:['D','E'],C:['F'],D:[],E:['F'],F:[]},        pos:{A:[400,60],B:[220,180],C:[580,180],D:[120,320],E:[320,320],F:[480,320]}},
+  cycle:  {adj:{A:['B'],B:['C'],C:['D'],D:['B'],E:['A','C']},              pos:{A:[200,80],B:[500,80],C:[600,260],D:[350,380],E:[80,260]}},
+  longest:{adj:{S:['A','B'],A:['C'],B:['C','D'],C:['T'],D:['T'],T:[]},     pos:{S:[400,60],A:[200,200],B:[600,200],C:[280,340],D:[540,340],T:[400,440]}},
+  disc:   {adj:{A:['B'],B:['C'],C:[],D:['E'],E:[],F:[]},                   pos:{A:[140,120],B:[300,80],C:[440,160],D:[160,340],E:[320,380],F:[560,260]}}
+};
+
+// ═══════════════════════════════════════════════════════════
+//  PHASE 2 — PSEUDOCODE DATA (code + rich tooltip per line)
+// ═══════════════════════════════════════════════════════════
+const PSEUDO = {
+  dfs:[
+    {c:"DFS(G):",                                     t:"<b>Entry point.</b> Main DFS driver. Runs over all vertices of G, ensuring every vertex is visited even in disconnected graphs. Calls DFS-VISIT for each unvisited root."},
+    {c:"  for each vertex u ∈ G.V:",                  t:"<b>Initialization loop.</b> Iterate over every vertex before DFS begins to set its starting state."},
+    {c:"    color[u] = BLUE",                        t:"<b>BLUE = unvisited.</b> All vertices start BLUE. DFS colors them <b>YELLOW</b> when first discovered and <b>GREEN</b> when fully finished."},
+    {c:"    π[u] = NIL",                             t:"<b>Parent pointer.</b> <code>π[u]</code> records u's DFS-tree parent. NIL means u has no parent yet. Tree edges set this."},
+    {c:"  time = 0",                                  t:"<b>Global timestamp.</b> Monotonically increasing counter. Incremented once on discovery and once on finish, giving unique <code>d[u]</code> and <code>f[u]</code>."},
+    {c:"  for each vertex u ∈ G.V:",                  t:"<b>Main DFS loop.</b> Start a new DFS tree from every unvisited vertex. Guarantees all connected components are explored."},
+    {c:"    if color[u] == BLUE:",                   t:"<b>Start a new DFS tree.</b> Only call DFS-VISIT if u is still unvisited (BLUE). This makes u the root of a new DFS tree."},
+    {c:"      DFS-VISIT(G, u)",                       t:"<b>Launch DFS from u.</b> Explores u and every vertex reachable from u, stamping discovery/finish times."},
+    {c:"",                                            t:""},
+    {c:"DFS-VISIT(G, u):",                            t:"<b>DFS-VISIT(u).</b> The recursive workhorse. Discovers u, visits all neighbors, then finishes u. Called once per vertex."},
+    {c:"  color[u] = YELLOW",                           t:"<b>Discover u — YELLOW.</b> YELLOW = 'on the recursion stack'. Key: if we find an edge to a YELLOW vertex → back edge → cycle!"},
+    {c:"  time = time + 1",                           t:"<b>Advance clock.</b> Increment global timer before stamping the discovery time."},
+    {c:"  d[u] = time",                               t:"<b>Discovery time d[u].</b> The opening '(' of u's parenthesis interval. With <code>f[u]</code>, the interval [d[u], f[u]] encodes the entire DFS subtree of u."},
+    {c:"  for each v in Adj[u]:",                     t:"<b>Explore neighbors.</b> For every outgoing edge (u→v), classify it and recurse if v is unvisited."},
+    {c:"    if color[v] == BLUE:",                   t:"<b>BLUE neighbor → Tree Edge.</b> v is unvisited — first time we reach it. Set parent and recurse into v."},
+    {c:"      π[v] = u",                             t:"<b>Set parent.</b> <code>π[v] = u</code> means u discovered v. Edge (u→v) is a <b style='color:#64f0c8'>TREE EDGE</b> in the DFS forest."},
+    {c:"      DFS-VISIT(G, v)",                       t:"<b>Recurse into v.</b> Push DFS-VISIT(v) onto the call stack. Returns only after v's entire subtree is finished."},
+    {c:"    elif color[v] == YELLOW:",                  t:"<b>YELLOW neighbor → Back Edge!</b> v is an ancestor still on the stack. Edge u→v goes 'backward' up the tree → <b style='color:#ff5c7a'>CYCLE DETECTED.</b>"},
+    {c:"      classify: BACK EDGE",                  t:"<b style='color:#ff5c7a'>Back Edge (u→v).</b> v being YELLOW means there's a path from v to u in the DFS tree, and u→v closes a cycle. Only back edges can create cycles in directed graphs."},
+    {c:"    else: // color[v] == GREEN",              t:"<b>GREEN neighbor.</b> v is fully finished. Distinguish FORWARD vs CROSS by comparing discovery times d[u] and d[v]."},
+    {c:"      if d[u] < d[v]: FORWARD EDGE",         t:"<b style='color:#c77dff'>Forward Edge (u→v).</b> u discovered before v, but v already finished. v is a descendant of u in the DFS tree, just not a direct child."},
+    {c:"      else:           CROSS EDGE",            t:"<b style='color:#ff9f43'>Cross Edge (u→v).</b> v discovered before u — they're in different branches or components. v finished independently before u even started exploring this branch."},
+    {c:"  color[u] = GREEN",                          t:"<b>Finish u — GREEN.</b> All neighbors of u have been explored. u leaves the call stack permanently. Its DFS subtree is complete."},
+    {c:"  time = time + 1",                           t:"<b>Advance clock.</b> Increment timer before stamping the finish time."},
+    {c:"  f[u] = time",                               t:"<b>Finish time f[u].</b> The closing ')' of u's parenthesis. <b>Parenthesis Theorem:</b> for any two vertices, their intervals [d,f] are either disjoint or one fully contains the other — never partially overlapping."}
+  ],
+  topo:[
+    {c:"TOPOLOGICAL-SORT(G):",                        t:"<b>Topological Sort.</b> Returns a linear ordering of vertices so for every edge (u→v), u appears before v. Only valid on DAGs — back edges mean cycles, which make topo sort impossible."},
+    {c:"  Run DFS(G) — compute all f[ ] times",       t:"<b>Run full DFS.</b> We need finish times f[u] for all vertices. The critical insight: if edge (u→v) exists, then f[v] &lt; f[u] always holds."},
+    {c:"  As each vertex u finishes:",                t:"<b>Hook at finish time.</b> Intercept DFS when a vertex turns GREEN and prepend it to the output list."},
+    {c:"    prepend u to result list",                t:"<b>Prepend = decreasing finish order.</b> Prepending always inserts at the front. Final list = vertices sorted by decreasing f[u]. This is valid because if (u→v), then f[u] &gt; f[v] so u is prepended later, ending up before v."},
+    {c:"  return result",                             t:"<b>Correct topological order.</b> For every edge (u→v): f[u] &gt; f[v] → u is before v in the list. ✓"},
+    {c:"",                                            t:""},
+    {c:"Correctness: for edge (u→v),",                t:"<b>Key correctness argument.</b> When DFS explores edge (u→v): if v is BLUE it finishes before u → f[v] &lt; f[u]. If v is already GREEN, same conclusion."},
+    {c:"  f[v] < f[u] holds for all edges",           t:"<b>Invariant.</b> Finish times strictly decrease along every edge in a DAG. Sorting by decreasing f gives u before v for every edge (u→v)."},
+    {c:"Valid only if no back edge exists",            t:"<b>DAG requirement.</b> If any back edge is found, a cycle exists and no valid topological ordering is possible."}
+  ],
+  cycle:[
+    {c:"CYCLE-DETECTION(G):",                         t:"<b>Cycle Detection via DFS.</b> A directed graph G has a cycle ⟺ DFS finds a back edge. This is a theorem (CLRS 22.3), not just a heuristic."},
+    {c:"  Run DFS(G)",                                t:"<b>Full DFS run.</b> DFS classifies all edges. We only care about back edges."},
+    {c:"  if any BACK EDGE found:",                   t:"<b>Back edge ↔ cycle.</b> A back edge (u→v) means v is an ancestor of u on the stack, creating a cycle: v →...→ u → v."},
+    {c:"    return TRUE  // has cycle",               t:"<b>Cycle confirmed.</b> The back edge (u→v) together with the DFS tree path from v to u forms a cycle."},
+    {c:"  return FALSE   // G is a DAG",              t:"<b>No cycles → DAG.</b> If DFS completes with no back edges, the graph is acyclic and topological sort is valid."},
+    {c:"",                                            t:""},
+    {c:"DFS-VISIT(G, u):",                            t:"<b>DFS-VISIT for cycle detection.</b> Identical to standard DFS — we just watch for YELLOW neighbors."},
+    {c:"  color[u] = YELLOW",                           t:"<b>YELLOW = on stack.</b> This is the mechanism: YELLOW means 'currently being explored, still on the recursion stack'."},
+    {c:"  for v in Adj[u]:",                          t:"<b>Check each neighbor.</b> For every outgoing edge (u→v), inspect v's color."},
+    {c:"    if color[v] == YELLOW:",                    t:"<b>YELLOW → back edge → CYCLE!</b> v is still on the stack, meaning there's a path from v to u, and edge u→v closes the loop."},
+    {c:"      hasCycle = true  // ← CYCLE!",         t:"<b>Record cycle.</b> We found a back edge (u→v). In a directed graph, this is the exact condition for a cycle."},
+    {c:"    elif color[v] == BLUE:",                 t:"<b>BLUE → tree edge.</b> Normal recursion — v is unvisited."},
+    {c:"      DFS-VISIT(G, v)",                       t:"<b>Recurse into v.</b>"},
+    {c:"  color[u] = GREEN",                         t:"<b>Finish u.</b> All paths from u explored. u leaves the stack."}
+  ],
+  dp:[
+    {c:"LONGEST-PATH-DAG(G, s):",                     t:"<b>Longest Path on DAG.</b> Unlike general graphs (NP-hard), DAGs allow O(V+E) longest path via topo sort + DP. Topo order guarantees all predecessors are processed before any successor."},
+    {c:"  // Step 1: Topological Sort",               t:"<b>Step 1.</b> Compute a topological ordering. Ensures every vertex u is processed before all vertices it points to."},
+    {c:"  topoOrder = TOPOLOGICAL-SORT(G)",           t:"<b>TOPOLOGICAL-SORT(G).</b> Runs DFS and returns vertices in decreasing finish-time order. For every edge (u→v), u comes before v."},
+    {c:"  // Step 2: Initialize distances",           t:"<b>Step 2.</b> Set all distances to −∞ (unreachable) except the source s which has distance 0."},
+    {c:"  dist[v] = -∞  for all v ∈ G.V",           t:"<b>−∞ = unreachable.</b> Means 'no known path yet'. Will be updated as we process each vertex in topo order."},
+    {c:"  dist[s] = 0",                              t:"<b>Source distance = 0.</b> The path from s to s has length 0. All other distances are built from this."},
+    {c:"  // Step 3: Relax in topo order",            t:"<b>Step 3: DP relaxation.</b> Process vertices in topo order. For each edge, try to improve the neighbor's distance."},
+    {c:"  for each u in topoOrder:",                  t:"<b>Process in topo order.</b> When we process u, dist[u] is already final — all predecessors have been processed. This is the DP guarantee."},
+    {c:"    for each v in Adj[u]:",                   t:"<b>Relax edges from u.</b> For each edge (u→v), check if routing through u gives a longer path to v."},
+    {c:"      if dist[u]+w(u,v) > dist[v]:",         t:"<b>DP transition.</b> If path s→…→u→v is longer than current best for v, update. Identical to Bellman-Ford relaxation but correct here because of topo order."},
+    {c:"        dist[v] = dist[u] + w(u,v)",         t:"<b>Update longest path to v.</b> <code>w(u,v) = 1</code> for unweighted graphs. This reflects the longest number of edges from s to v."},
+    {c:"  return dist",                              t:"<b>Return all longest distances.</b> <code>dist[v]</code> = length of longest path from s to v. −∞ means v is unreachable from s."}
+  ]
+};
+
+// ═══════════════════════════════════════════════════════════
+//  PHASE 2 — CONCRETE EXPLANATION GENERATOR
+// ═══════════════════════════════════════════════════════════
+function buildExplain(st) {
+  const nw = s => `<span class="nw">${s}</span>`;
+  const ng = s => `<span class="ng">${s}</span>`;
+  const nb = s => `<span class="nb">${s}</span>`;
+  const na = s => `<span class="na">${s}</span>`;
+  const v  = s => `<span class="v">${s}</span>`;
+  const et = (s,t) => `<span class="et-${t}">${s}</span>`;
+  const colorOf = n => st.nodeColors[n] || 'white';
+  const colorDisplay = n => { const c=colorOf(n); return c==='white'?'BLUE':c==='gray'?'YELLOW':'GREEN'; };
+  const colorTag = n => { const c=colorOf(n); return c==='white'?nw(n):c==='gray'?ng(n):nb(n); };
+
+  let html = '', why = '', chips = [];
+
+  switch (st.action) {
+    case 'init':
+      html = `<b>DFS initialized.</b> All <b>${Object.keys(st.nodeColors).length} vertices</b> colored ${nw('BLUE')} (unvisited). Global timer = ${v('0')}. All parent pointers set to NIL.`;
+      why  = `Every vertex must start BLUE so DFS can detect which are unvisited. The timer starts at 0 and will produce unique discovery and finish timestamps.`;
+      chips = [];
+      break;
+
+    case 'main-loop':
+      html = `<b>Starting main DFS loop.</b> Will iterate over all vertices. For each ${nw('BLUE')} vertex, a new DFS tree is started.`;
+      why  = `Multiple DFS trees may be needed to cover all vertices in disconnected graphs.`;
+      break;
+
+    case 'check':
+      html = `Checking vertex ${colorTag(st.node)}: color is ${nw('BLUE')} → calling ${v(`DFS-VISIT(G, ${st.node})`)} to start a new DFS tree rooted at ${na(st.node)}.`;
+      why  = `${st.node} is unvisited, so it becomes the root of a new DFS tree. Every connected component gets its own DFS tree.`;
+      break;
+
+    case 'discover': {
+      const stk = [...st.callStack].join(' → ') || st.node;
+      html = `<b>Discover vertex ${na(st.node)}.</b> Color[${st.node}]: ${nw('BLUE')} → ${ng('YELLOW')}. Timer: ${v(st.time - 1)} → ${v(st.time)}. Discovery time ${v(`d[${st.node}] = ${st.nodeD[st.node]}`)} stamped.`;
+      why  = `YELLOW means "${st.node} is now on the recursion stack". If we later find an edge pointing to a YELLOW vertex, it's a back edge — which means a cycle.`;
+      chips = [
+        { lbl:`d[${st.node}]`, val: st.nodeD[st.node], cls:'cd' },
+        { lbl:'timer', val: st.time, cls:'' },
+        { lbl:'stack', val: stk, cls:'' }
+      ];
+      break;
+    }
+
+    case 'examine':
+      html = `Examining edge ${na(st.node)} → ${colorTag(st.v)}. Neighbor <b>${st.v}</b> is currently <b>${colorDisplay(st.v)}</b>. Classifying the edge...`;
+      why  = `We check v's color to decide: BLUE → tree edge (recurse), YELLOW → back edge (cycle!), GREEN → forward or cross edge.`;
+      chips = [{ lbl:`color[${st.v}]`, val: colorDisplay(st.v), cls:'' }];
+      break;
+
+    case 'tree':
+      html = `${et('TREE EDGE','tree')} (${st.node} → ${st.v}). ${colorTag(st.v)} is ${nw('BLUE')} → first discovery. Set ${v(`π[${st.v}] = ${st.node}`)}. Recursing into ${nw(st.v)}.`;
+      why  = `Tree edges form the DFS spanning forest. Edge (${st.node}→${st.v}) is a tree edge because ${st.v} is being discovered for the first time via ${st.node}.`;
+      chips = [
+        { lbl:`π[${st.v}]`, val: st.node, cls:'' },
+        { lbl:'type', val:'TREE', cls:'cf' }
+      ];
+      break;
+
+    case 'back': {
+      const du = st.nodeD[st.node] || '?', dv = st.nodeD[st.v] || '?';
+      html = `⚠ ${et('BACK EDGE','back')} (${st.node} → ${st.v})! Vertex ${colorTag(st.v)} is ${ng('YELLOW')} (on the stack). ${v(`d[${st.v}] = ${dv}`)} < ${v(`d[${st.node}] = ${du}`)}. <b>Cycle detected!</b>`;
+      why  = `YELLOW means ${st.v} is currently on the call stack. There is a DFS path from ${st.v} to ${st.node}, and edge ${st.node}→${st.v} closes the cycle.`;
+      chips = [
+        { lbl:`d[${st.node}]`, val: du, cls:'cd' },
+        { lbl:`d[${st.v}]`, val: dv, cls:'cd' },
+        { lbl:'type', val:'⚠ BACK', cls:'ce' }
+      ];
+      break;
+    }
+
+    case 'forward': {
+      const du = st.nodeD[st.node]||'?', dv = st.nodeD[st.v]||'?';
+      html = `${et('FORWARD EDGE','forward')} (${st.node} → ${st.v}). ${colorTag(st.v)} is ${nb('GREEN')} (finished). ${v(`d[${st.node}] = ${du}`)} < ${v(`d[${st.v}] = ${dv}`)} → ${st.node} was discovered before ${st.v}.`;
+      why  = `Forward edges connect an ancestor to a non-child descendant. ${st.v} was discovered after ${st.node} (d[${st.node}] < d[${st.v}]) but finished before ${st.node} returned.`;
+      chips = [
+        { lbl:`d[${st.node}]`, val: du, cls:'cd' },
+        { lbl:`d[${st.v}]`, val: dv, cls:'cd' },
+        { lbl:'type', val:'FORWARD', cls:'cf' }
+      ];
+      break;
+    }
+
+    case 'cross': {
+      const du = st.nodeD[st.node]||'?', dv = st.nodeD[st.v]||'?';
+      html = `${et('CROSS EDGE','cross')} (${st.node} → ${st.v}). ${colorTag(st.v)} is ${nb('GREEN')}. ${v(`d[${st.node}] = ${du}`)} > ${v(`d[${st.v}] = ${dv}`)} → ${st.v} was discovered in an earlier branch.`;
+      why  = `Cross edges connect vertices in different DFS subtrees. ${st.v} was discovered before ${st.node} (different branch) and has since finished.`;
+      chips = [
+        { lbl:`d[${st.node}]`, val: du, cls:'cd' },
+        { lbl:`d[${st.v}]`, val: dv, cls:'cd' },
+        { lbl:'type', val:'CROSS', cls:'ce' }
+      ];
+      break;
+    }
+
+    case 'finish': {
+      const fu = st.nodeF[st.node]||'?', du = st.nodeD[st.node]||'?';
+      const interval = `[${du}, ${fu}]`;
+      const topoSoFar = st.topoOrder.join(' → ') || '(none yet)';
+      html = `<b>Finish vertex ${nb(st.node)}.</b> Color[${st.node}]: ${ng('YELLOW')} → ${nb('GREEN')}. Finish time ${v(`f[${st.node}] = ${fu}`)}. Interval ${v(interval)}. Prepended to topo order.`;
+      why  = `GREEN = fully explored. Every vertex reachable from ${st.node} is already GREEN. Interval ${interval} is the "parenthesis" of ${st.node} — it contains all intervals of ${st.node}'s DFS descendants.`;
+      chips = [
+        { lbl:`d[${st.node}]`, val: du, cls:'cd' },
+        { lbl:`f[${st.node}]`, val: fu, cls:'cf' },
+        { lbl:'topo so far', val: topoSoFar, cls:'' }
+      ];
+      break;
+    }
+
+    case 'done': {
+      const hasCyc = Object.values(st.edgeTypes).some(t => t==='back');
+      const dpEntries = Object.entries(st.dpDist).filter(([,val]) => val !== -Infinity);
+      const dpSummary = dpEntries.length ? dpEntries.map(([n,val])=>`${n}=${val}`).join(', ') : '';
+      const maxDp = dpEntries.length ? Math.max(...dpEntries.map(([,val])=>val)) : 0;
+      html = `<b>DFS Complete!</b> All ${Object.keys(st.nodeColors).length} vertices explored. Timer = ${v(st.time)}. ${hasCyc ? `<b style="color:var(--c5)">⚠ Cycle detected.</b> No valid topological sort.` : `<b style="color:var(--c2)">✓ No cycles — valid DAG.</b>`} Topological order: ${v(st.topoOrder.join(' → '))}${dpSummary ? `. <b>Longest paths:</b> ${v(dpSummary)}. Maximum = ${v(maxDp)} edges.` : ''}`;
+      why  = hasCyc ? `The back edge closes a cycle — topological ordering is impossible for cyclic graphs.` : `The absence of back edges proves this is a DAG. The finish-time ordering gives a valid topological sort.`;
+      chips = [
+        { lbl:'timer', val: st.time, cls:'' },
+        { lbl:'topo order', val: st.topoOrder.join(' → '), cls:'cf' },
+        ...(dpSummary ? [{ lbl:'longest path', val: maxDp + ' edges', cls:'cd' }] : [])
+      ];
+      break;
+    }
+
+    default:
+      html = st.action || '—';
+  }
+
+  return { html, why, chips };
+}
+
+// ═══════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════
+let graph={}, positions={}, steps=[], stepIndex=0;
+let playTimer=null, playToken=0, speed=1.0, mode='dfs';
+let nodeColors={}, nodeD={}, nodeF={}, edgeTypes={};
+let activeNode=null, activeEdge=null, callStack=[], topoOrder=[];
+let hasCycle=false, dpDist={}, visitedCount=0, edgeCount=0, backCount=0, currentTime=0;
+let activeLine=-1;
+
+// ═══════════════════════════════════════════════════════════
+//  GRAPH LOADING
+// ═══════════════════════════════════════════════════════════
+function parseAdj(text) {
+  const adj={};
+  text.trim().split('\n').forEach(line => {
+    const [lhs,...rest]=line.split(':');
+    if(!lhs) return;
+    adj[lhs.trim()]=(rest.join(':').trim().split(/\s+/).filter(Boolean));
+  });
+  return adj;
+}
+function autoLayout(nodes) {
+  const pos={}, n=nodes.length, cx=400, cy=240, r=Math.min(180,50+n*22);
+  nodes.forEach((nd,i)=>{const a=(2*Math.PI*i/n)-Math.PI/2; pos[nd]=[cx+r*Math.cos(a),cy+r*Math.sin(a)];});
+  return pos;
+}
+function loadPreset(key,btn) {
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  const p=PRESETS[key]; graph=p.adj; positions={...p.pos};
+  document.getElementById('graphInput').value=Object.entries(graph).map(([k,v])=>`${k}: ${v.join(' ')}`).join('\n');
+  refreshStartSel(); resetAll(); drawGraph();
+  setTimeout(()=>rebuildDPTable(), 50);
+}
+function loadCustom() {
+  graph=parseAdj(document.getElementById('graphInput').value);
+  positions=autoLayout(Object.keys(graph));
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+  refreshStartSel(); resetAll(); drawGraph();
+  setTimeout(()=>rebuildDPTable(), 50);
+}
+function refreshStartSel() {
+  const sel=document.getElementById('startNode'); sel.innerHTML='';
+  Object.keys(graph).forEach(n=>{const o=document.createElement('option'); o.value=n; o.textContent=n; sel.appendChild(o);});
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PHASE 2 — PSEUDOCODE RENDER WITH LINE NUMBERS + TOOLTIPS
+// ═══════════════════════════════════════════════════════════
+const MODETAGS = {dfs:'DFS-VISIT', topo:'TOPO-SORT', cycle:'CYCLE-DET', dp:'LONGEST-PATH'};
+const MODELABELS = {dfs:'DFS', topo:'TOPO-SORT', cycle:'CYCLE-DET', dp:'DP'};
+
+function renderPseudo() {
+  const lines = PSEUDO[mode] || PSEUDO.dfs;
+  const scroll = document.getElementById('pseudoScroll');
+  scroll.innerHTML = lines.map((entry, i) => {
+    const hasCode = entry.c && entry.c.trim();
+    const hasTip  = entry.t && entry.t.trim();
+    const lineNum = hasCode ? String(i+1).padStart(2,' ') : '  ';
+    const encoded = hasTip ? encodeURIComponent(entry.t) : '';
+    return `<div class="code-row" data-line="${i}"${hasTip?` data-tip="${encoded}"`:''}>
+      <div class="ln">${lineNum}</div>
+      <div class="lc">${entry.c||''}</div>
+      ${hasTip?`<div class="tt-btn" data-i="${i}">ⓘ</div>`:`<div style="width:18px;flex-shrink:0"></div>`}
+    </div>`;
+  }).join('');
+
+  // Tooltip wiring
+  const tt = document.getElementById('ttFloat');
+  scroll.querySelectorAll('.code-row[data-tip]').forEach(row => {
+    const i   = +row.dataset.line;
+    const tip = decodeURIComponent(row.dataset.tip);
+    const codeText = (lines[i]||{}).c||'';
+
+    const show = e => {
+      document.getElementById('ttNum').textContent  = `Line ${i+1}`;
+      document.getElementById('ttCode').textContent = codeText.trim()||'(blank)';
+      document.getElementById('ttBody').innerHTML   = tip;
+      posTooltip(e); tt.classList.add('show');
+    };
+    row.addEventListener('mouseenter', show);
+    row.addEventListener('mousemove',  posTooltip);
+    row.addEventListener('mouseleave', () => tt.classList.remove('show'));
+  });
+
+  document.getElementById('pseudoModeTag').textContent = MODETAGS[mode]||'DFS-VISIT';
+  document.getElementById('explMode').textContent      = MODELABELS[mode]||'DFS';
+  activeLine = -1;
+}
+
+function posTooltip(e) {
+  const tt=document.getElementById('ttFloat'), W=window.innerWidth, H=window.innerHeight;
+  let x=e.clientX+16, y=e.clientY-10;
+  if(x+290>W) x=e.clientX-290;
+  if(y+130>H) y=e.clientY-130;
+  tt.style.left=x+'px'; tt.style.top=y+'px';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PHASE 2 — HIGHLIGHT LINE + AUTO-SCROLL
+// ═══════════════════════════════════════════════════════════
+function highlightLine(lineIdx) {
+  if (lineIdx === activeLine) return;
+  activeLine = lineIdx;
+  const scroll = document.getElementById('pseudoScroll');
+  const lines  = PSEUDO[mode] || [];
+
+  scroll.querySelectorAll('.code-row').forEach((row, i) => {
+    row.classList.remove('active');
+    const old = row.querySelector('.exec-badge');
+    if (old) old.remove();
+    // Mark previously executed lines that have code
+    if (i < lineIdx && (lines[i]||{}).c?.trim()) row.classList.add('visited');
+    else if (i >= lineIdx) row.classList.remove('visited');
+  });
+
+  const activeRow = scroll.querySelector(`.code-row[data-line="${lineIdx}"]`);
+  if (activeRow) {
+    activeRow.classList.add('active');
+    // "EXEC ▶" badge
+    const badge = document.createElement('span');
+    badge.className = 'exec-badge';
+    badge.textContent = 'EXEC ▶';
+    activeRow.appendChild(badge);
+
+    // Auto-scroll: keep active line in view with 40px margin
+    const rowTop  = activeRow.offsetTop;
+    const rowBot  = rowTop + activeRow.offsetHeight;
+    const visTop  = scroll.scrollTop;
+    const visBot  = visTop + scroll.clientHeight;
+    const margin  = 44;
+    if (rowTop < visTop + margin) {
+      scroll.scrollTo({ top: rowTop - margin, behavior: 'smooth' });
+    } else if (rowBot > visBot - margin) {
+      scroll.scrollTo({ top: rowBot - scroll.clientHeight + margin, behavior: 'smooth' });
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PHASE 2 — SHOW EXPLANATION WITH CONCRETE VALUES
+// ═══════════════════════════════════════════════════════════
+function showExplain(st) {
+  const body   = document.getElementById('explBody');
+  const chips  = document.getElementById('explChips');
+  const stepBadge = document.getElementById('explStep');
+
+  stepBadge.textContent = steps.length ? `${stepIndex} / ${steps.length}` : '—';
+
+  const { html, why, chips: chipData } = buildExplain(st);
+
+  body.innerHTML = html + (why ? `<span class="why">↳ ${why}</span>` : '');
+
+  // Flash
+  body.classList.remove('flash');
+  void body.offsetWidth;
+  body.classList.add('flash');
+  clearTimeout(body._ft);
+  body._ft = setTimeout(() => body.classList.remove('flash'), 350);
+
+  // Value chips
+  chips.innerHTML = (chipData && chipData.length)
+    ? chipData.map(c => `<div class="chip ${c.cls||''}"><span>${c.lbl}</span><b>${c.val}</b></div>`).join('')
+    : '';
+}
+
+function showExplainMsg(html) {
+  document.getElementById('explBody').innerHTML = html;
+  document.getElementById('explChips').innerHTML = '';
+  document.getElementById('explStep').textContent = '—';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  DFS STEP GENERATOR
+// ═══════════════════════════════════════════════════════════
+function generateSteps() {
+  const nodes=Object.keys(graph);
+  const color={}, d={}, f={}, parent={}, edgeT={};
+  let time=0; const stack=[], topo=[];
+  let cycleFound=false, cycleEdge=null;
+  const dp={}; const out=[];
+  nodes.forEach(u=>{color[u]='white';parent[u]=null;});
+
+  function snap(codeLine, action, node, etype, vNode, extra) {
+    out.push({ codeLine, action, node:node||null, etype:etype||null, v:vNode||null,
+      nodeColors:{...color}, nodeD:{...d}, nodeF:{...f}, edgeTypes:{...edgeT},
+      activeNode:node||null, activeEdge:extra?.edge||null,
+      callStack:[...stack], topoOrder:[...topo],
+      hasCycle:cycleFound, cycleEdge, dpDist:{...dp}, time, ...extra });
+  }
+
+  snap(0,'init',null,null,null);
+
+  function visit(u) {
+    stack.push(u); color[u]='gray'; time++; d[u]=time;
+    snap(10,'discover',u,null,null);
+    for (const v of (graph[u]||[])) {
+      snap(13,'examine',u,null,v,{edge:`${u}>${v}`});
+      if (color[v]==='white') {
+        edgeT[`${u}>${v}`]='tree'; parent[v]=u;
+        snap(14,'tree',u,'tree',v,{edge:`${u}>${v}`});
+        visit(v);
+      } else if (color[v]==='gray') {
+        edgeT[`${u}>${v}`]='back'; cycleFound=true; cycleEdge=`${u}→${v}`;
+        snap(17,'back',u,'back',v,{edge:`${u}>${v}`});
+      } else {
+        if (d[u]<d[v]) {
+          edgeT[`${u}>${v}`]='forward';
+          snap(20,'forward',u,'forward',v,{edge:`${u}>${v}`});
+        } else {
+          edgeT[`${u}>${v}`]='cross';
+          snap(21,'cross',u,'cross',v,{edge:`${u}>${v}`});
+        }
+      }
+    }
+    color[u]='black'; time++; f[u]=time; topo.unshift(u);
+    stack.pop();
+    snap(22,'finish',u,null,null);
+  }
+
+  const startNode=document.getElementById('startNode').value||nodes[0];
+  const ordered=[startNode,...nodes.filter(n=>n!==startNode)];
+  snap(5,'main-loop',null,null,null);
+  for (const u of ordered) {
+    if (color[u]==='white') { snap(6,'check',u,null,null); visit(u); }
+  }
+
+  // DP pass — run AFTER full DFS, process in topo order (finish-time desc)
+  // topo[] is already in correct order (prepended on finish = decreasing f)
+  nodes.forEach(n => { dp[n] = -Infinity; });
+  dp[startNode] = 0;
+  for (const u of topo) {
+    if (dp[u] === -Infinity) continue;
+    for (const v of (graph[u]||[])) {
+      if (dp[u] + 1 > dp[v]) dp[v] = dp[u] + 1;
+    }
+  }
+  snap(0,'done',null,null,null);
+  // Update last snap with correct dp values
+  if (out.length) out[out.length-1].dpDist = {...dp};
+  return out;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  APPLY STEP
+// ═══════════════════════════════════════════════════════════
+function applyStep(st) {
+  nodeColors=st.nodeColors; nodeD=st.nodeD; nodeF=st.nodeF; edgeTypes=st.edgeTypes;
+  activeNode=st.activeNode; activeEdge=st.activeEdge; callStack=st.callStack;
+  topoOrder=st.topoOrder; hasCycle=st.hasCycle; dpDist=st.dpDist; currentTime=st.time;
+  visitedCount=Object.values(nodeColors).filter(c=>c!=='white').length;
+  edgeCount=Object.keys(edgeTypes).length;
+  backCount=Object.values(edgeTypes).filter(t=>t==='back').length;
+  drawGraph(); drawParen(); updateStack(); updateTopo(); updateStats();
+  highlightLine(st.codeLine);
+  showExplain(st);
+  addHistRow(st);
+  if (hasCycle) document.getElementById('cycleAlert').classList.add('show');
+  // FIX 2: flash the newly sorted node in the topo strip
+  if (st.action === 'finish' && st.node) flashTopoNode(st.node);
+  // FIX 3: sync DP table live when in Longest Path mode
+  if (mode === 'dp') syncDPTableToStep(st);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  DRAW GRAPH
+// ═══════════════════════════════════════════════════════════
+function drawGraph() {
+  const eG=document.getElementById('edgesG'), nG=document.getElementById('nodesG');
+  eG.innerHTML=''; nG.innerHTML='';
+  const nodes=Object.keys(graph); if(!nodes.length)return;
+  const allX=nodes.map(n=>positions[n][0]), allY=nodes.map(n=>positions[n][1]);
+  const minX=Math.min(...allX),maxX=Math.max(...allX),minY=Math.min(...allY),maxY=Math.max(...allY);
+  const pX=70,pY=60, sc=Math.min(maxX>minX?(800-2*pX)/(maxX-minX):1, maxY>minY?(480-2*pY)/(maxY-minY):1, 1.4);
+  const oX=pX+((800-2*pX)-(maxX-minX)*sc)/2, oY=pY+((480-2*pY)-(maxY-minY)*sc)/2;
+  const px=n=>[oX+(positions[n][0]-minX)*sc, oY+(positions[n][1]-minY)*sc];
+  const R=24;
+
+  nodes.forEach(u=>{
+    (graph[u]||[]).forEach(v=>{
+      if(!positions[v])return;
+      const [x1,y1]=px(u),[x2,y2]=px(v);
+      const dx=x2-x1,dy=y2-y1,len=Math.sqrt(dx*dx+dy*dy);
+      if(!len)return;
+      const ex=x2-(dx/len)*(R+2),ey=y2-(dy/len)*(R+2);
+      const sx=x1+(dx/len)*(R+2),sy=y1+(dy/len)*(R+2);
+      const key=`${u}>${v}`, etype=edgeTypes[key]||'default', isAct=activeEdge===key;
+      const cm={default:'rgba(255,255,255,0.20)',tree:'#64f0c8',back:'#ff5c7a',forward:'#c77dff',cross:'#ff9f43'};
+      const col=isAct?'#ff5c7a':cm[etype]||cm.default;
+      const sw=isAct?3:etype!=='default'?2:1.5;
+      let dd;
+      if(etype==='back'||etype==='cross'){
+        const mx=(sx+ex)/2,my=(sy+ey)/2,nx=-(dy/len)*26,ny=(dx/len)*26;
+        dd=`M ${sx} ${sy} Q ${mx+nx} ${my+ny} ${ex} ${ey}`;
+      } else dd=`M ${sx} ${sy} L ${ex} ${ey}`;
+      const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+      path.setAttribute('d',dd); path.setAttribute('fill','none');
+      path.setAttribute('stroke',col); path.setAttribute('stroke-width',sw);
+      path.setAttribute('marker-end',`url(#arr-${isAct?'active':etype})`);
+      path.classList.add('gedge-line'); eG.appendChild(path);
+      if(etype!=='default'){
+        const mx=(sx+ex)/2,my=(sy+ey)/2;
+        const lbl=document.createElementNS('http://www.w3.org/2000/svg','text');
+        lbl.setAttribute('x',mx+5);lbl.setAttribute('y',my-5);
+        lbl.setAttribute('font-size','10');lbl.setAttribute('font-weight','700');
+        lbl.setAttribute('fill',col);lbl.classList.add('gedge-label');
+        lbl.textContent=etype==='tree'?'T':etype==='back'?'B':etype==='forward'?'F':'C';
+        eG.appendChild(lbl);
+      }
+    });
+  });
+
+  nodes.forEach(u=>{
+    const [cx,cy]=px(u), color=nodeColors[u]||'white', isAct=activeNode===u;
+    const fm={white:'rgba(106,169,255,0.15)',gray:'rgba(255,209,102,0.25)',black:'rgba(100,240,200,0.20)'};
+    const sm={white:'rgba(106,169,255,0.55)',gray:'rgba(255,209,102,0.85)',black:'rgba(100,240,200,0.75)'};
+    const fill=isAct?'rgba(255,92,122,0.30)':fm[color], stroke=isAct?'#ff5c7a':sm[color], sw=isAct?3:2;
+    const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+    if(isAct){const gl=document.createElementNS('http://www.w3.org/2000/svg','circle');gl.setAttribute('cx',cx);gl.setAttribute('cy',cy);gl.setAttribute('r',R+8);gl.setAttribute('fill','rgba(255,92,122,0.10)');g.appendChild(gl);}
+    const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cx',cx);c.setAttribute('cy',cy);c.setAttribute('r',R);
+    c.setAttribute('fill',fill);c.setAttribute('stroke',stroke);c.setAttribute('stroke-width',sw);
+    c.classList.add('gnode-circle');g.appendChild(c);
+    const lbl=document.createElementNS('http://www.w3.org/2000/svg','text');
+    lbl.setAttribute('x',cx);lbl.setAttribute('y',cy+5);lbl.setAttribute('text-anchor','middle');
+    lbl.setAttribute('font-size','14');lbl.setAttribute('font-weight','800');
+    lbl.setAttribute('fill',isAct?'#ff5c7a':color==='white'?'rgba(232,236,255,0.80)':'#fff');
+    lbl.classList.add('gnode-text');lbl.textContent=u;g.appendChild(lbl);
+    if(nodeD[u]!==undefined){
+      const dt=document.createElementNS('http://www.w3.org/2000/svg','text');
+      dt.setAttribute('x',cx);dt.setAttribute('y',cy-R-6);dt.setAttribute('text-anchor','middle');
+      dt.setAttribute('font-size','10');dt.setAttribute('font-weight','700');
+      dt.setAttribute('fill',nodeF[u]!==undefined?'var(--c2)':'var(--c3)');
+      dt.classList.add('gnode-text');
+      dt.textContent=nodeF[u]!==undefined?`${nodeD[u]}/${nodeF[u]}`:`${nodeD[u]}/_`;g.appendChild(dt);
+    }
+    if(mode==='dp'&&dpDist[u]!==undefined&&dpDist[u]!==-Infinity){
+      const dpT=document.createElementNS('http://www.w3.org/2000/svg','text');
+      dpT.setAttribute('x',cx+R+4);dpT.setAttribute('y',cy+4);
+      dpT.setAttribute('font-size','11');dpT.setAttribute('font-weight','700');dpT.setAttribute('fill','var(--c4)');
+      dpT.classList.add('gnode-text');
+      dpT.textContent=`longest=${dpDist[u]}`;g.appendChild(dpT);
+    }
+    nG.appendChild(g);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PARENTHESIS TIMELINE
+// ═══════════════════════════════════════════════════════════
+function drawParen() {
+  const svg = document.getElementById('parenSvg');
+  svg.innerHTML = '';
+  const allNodes = Object.keys(graph);
+  const activeNodes = allNodes.filter(n => nodeD[n] !== undefined);
+  if (!activeNodes.length) return;
+
+  const W = 800, H = 200;
+  const padL = 44, padR = 14, padT = 12, rowH = 26;
+  const chartW = W - padL - padR;
+
+  // FIXED scale: always use 2×V as the total timeline
+  // so the axis stays stable from step 1 to the end
+  const totalTime = allNodes.length * 2;
+  const slotW = chartW / totalTime;
+
+  const cols = ['#6aa9ff','#64f0c8','#ffd166','#ff9f43','#ff5c7a','#c77dff','#ff6b6b','#64d8f0'];
+
+  // Draw time axis ticks first (always show full axis)
+  for (let t = 1; t <= totalTime; t++) {
+    const x = padL + (t - 0.5) * slotW;
+    const tick = document.createElementNS('http://www.w3.org/2000/svg','line');
+    tick.setAttribute('x1', x); tick.setAttribute('x2', x);
+    tick.setAttribute('y1', H - 18); tick.setAttribute('y2', H - 12);
+    tick.setAttribute('stroke', 'rgba(255,255,255,0.18)');
+    tick.setAttribute('stroke-width', '1');
+    svg.appendChild(tick);
+    const tlbl = document.createElementNS('http://www.w3.org/2000/svg','text');
+    tlbl.setAttribute('x', x); tlbl.setAttribute('y', H - 3);
+    tlbl.setAttribute('text-anchor', 'middle');
+    tlbl.setAttribute('font-size', '9');
+    tlbl.setAttribute('fill', 'rgba(183,192,255,0.55)');
+    tlbl.textContent = t;
+    svg.appendChild(tlbl);
+  }
+
+  // Axis baseline
+  const base = document.createElementNS('http://www.w3.org/2000/svg','line');
+  base.setAttribute('x1', padL); base.setAttribute('x2', padL + chartW);
+  base.setAttribute('y1', H - 20); base.setAttribute('y2', H - 20);
+  base.setAttribute('stroke', 'rgba(255,255,255,0.10)');
+  base.setAttribute('stroke-width', '1');
+  svg.appendChild(base);
+
+  // Draw each node row
+  allNodes.forEach((n, i) => {
+    const col = cols[i % cols.length];
+    const y = padT + i * rowH;
+    const h = rowH - 5;
+    const hasD = nodeD[n] !== undefined;
+    const hasF = nodeF[n] !== undefined;
+
+    // Node name label (left gutter)
+    const lbl = document.createElementNS('http://www.w3.org/2000/svg','text');
+    lbl.setAttribute('x', padL - 6);
+    lbl.setAttribute('y', y + h / 2 + 4);
+    lbl.setAttribute('text-anchor', 'end');
+    lbl.setAttribute('font-size', '11');
+    lbl.setAttribute('font-weight', '700');
+    lbl.setAttribute('fill', hasD ? col : 'rgba(183,192,255,0.22)');
+    lbl.textContent = n;
+    svg.appendChild(lbl);
+
+    if (!hasD) {
+      // Node not yet discovered — draw faint placeholder bar
+      const ph = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      ph.setAttribute('x', padL); ph.setAttribute('y', y);
+      ph.setAttribute('width', chartW); ph.setAttribute('height', h);
+      ph.setAttribute('rx', 4);
+      ph.setAttribute('fill', 'rgba(255,255,255,0.02)');
+      ph.setAttribute('stroke', 'rgba(255,255,255,0.05)');
+      ph.setAttribute('stroke-width', '1');
+      svg.appendChild(ph);
+      return;
+    }
+
+    // Bar from d[n] to f[n] (or current time if not finished)
+    const x1 = padL + (nodeD[n] - 1) * slotW;
+    const x2 = hasF
+      ? padL + nodeF[n] * slotW          // ends after the finish slot
+      : padL + (nodeD[n] - 0.1) * slotW + slotW * 0.8; // partial — just d slot
+
+    const barW = Math.max(x2 - x1, slotW * 0.7);
+    const isActive = activeNode === n;
+
+    // Background bar
+    const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    rect.setAttribute('x', x1); rect.setAttribute('y', y);
+    rect.setAttribute('width', barW); rect.setAttribute('height', h);
+    rect.setAttribute('rx', 5);
+    rect.setAttribute('fill', `${col}28`);
+    rect.setAttribute('stroke', col);
+    rect.setAttribute('stroke-width', isActive ? 2 : 1);
+    svg.appendChild(rect);
+
+    // d label — centered in its slot
+    const dX = padL + (nodeD[n] - 0.5) * slotW;
+    const dTxt = document.createElementNS('http://www.w3.org/2000/svg','text');
+    dTxt.setAttribute('x', dX); dTxt.setAttribute('y', y + h / 2 + 4);
+    dTxt.setAttribute('text-anchor', 'middle');
+    dTxt.setAttribute('font-size', '9'); dTxt.setAttribute('font-weight', '700');
+    dTxt.setAttribute('fill', isActive ? '#fff' : 'rgba(255,209,102,0.90)');
+    dTxt.textContent = nodeD[n];
+    svg.appendChild(dTxt);
+
+    // f label — centered in its slot (only when finished)
+    if (hasF) {
+      const fX = padL + (nodeF[n] - 0.5) * slotW;
+      const fTxt = document.createElementNS('http://www.w3.org/2000/svg','text');
+      fTxt.setAttribute('x', fX); fTxt.setAttribute('y', y + h / 2 + 4);
+      fTxt.setAttribute('text-anchor', 'middle');
+      fTxt.setAttribute('font-size', '9'); fTxt.setAttribute('font-weight', '700');
+      fTxt.setAttribute('fill', 'rgba(100,240,200,0.90)');
+      fTxt.textContent = nodeF[n];
+      svg.appendChild(fTxt);
+
+      // d/f combined label in the middle of the bar (only if bar wide enough)
+      if (barW > slotW * 2.5) {
+        const midX = (x1 + x1 + barW) / 2;
+        const mid = document.createElementNS('http://www.w3.org/2000/svg','text');
+        mid.setAttribute('x', midX); mid.setAttribute('y', y + h / 2 + 4);
+        mid.setAttribute('text-anchor', 'middle');
+        mid.setAttribute('font-size', '8'); mid.setAttribute('font-weight', '600');
+        mid.setAttribute('fill', 'rgba(255,255,255,0.35)');
+        mid.textContent = `${nodeD[n]}/${nodeF[n]}`;
+        svg.appendChild(mid);
+      }
+    }
+
+    // "in stack" indicator dot when node is YELLOW
+    if (!hasF && hasD) {
+      const dot = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      dot.setAttribute('cx', x1 + barW - 6); dot.setAttribute('cy', y + h / 2);
+      dot.setAttribute('r', '3');
+      dot.setAttribute('fill', 'rgba(255,209,102,0.80)');
+      svg.appendChild(dot);
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  UI HELPERS
+// ═══════════════════════════════════════════════════════════
+function updateStack() {
+  const el=document.getElementById('stackFrames');
+  if(!callStack.length){el.innerHTML='<div style="font-size:11px;color:var(--muted);text-align:center;padding:4px 0">Stack is empty</div>';document.getElementById('stackDepthLbl').textContent='depth: 0';return;}
+  document.getElementById('stackDepthLbl').textContent=`depth: ${callStack.length}`;
+  el.innerHTML=[...callStack].reverse().map((n,i)=>{
+    const isTop=i===0;
+    return `<div class="stack-frame${isTop?' top':''}" style="border-left:3px solid ${isTop?'var(--c5)':'rgba(255,255,255,0.12)'}"><span>${n}</span><small>d=${nodeD[n]||'?'}</small></div>`;
+  }).join('');
+}
+function updateTopo() {
+  const el=document.getElementById('topoStrip');
+  if(!topoOrder.length){el.innerHTML='<span style="font-size:11px;color:var(--muted)">—</span>';return;}
+  el.innerHTML=topoOrder.map((n,i)=>`<span class="topo-node" id="topo-node-${n}">${n}</span>${i<topoOrder.length-1?'<span class="topo-arrow">→</span>':''}`).join('');
+}
+
+function flashTopoNode(n) {
+  // Flash the newly prepended topo node to highlight the sort step
+  const el = document.getElementById(`topo-node-${n}`);
+  if (!el) return;
+  el.style.transition = 'none';
+  el.style.background = 'rgba(255,209,102,0.45)';
+  el.style.borderColor = 'rgba(255,209,102,0.90)';
+  el.style.color = '#fff';
+  el.style.transform = 'scale(1.18)';
+  clearTimeout(el._ft);
+  el._ft = setTimeout(() => {
+    el.style.transition = 'all 400ms ease';
+    el.style.background = '';
+    el.style.borderColor = '';
+    el.style.color = '';
+    el.style.transform = '';
+  }, 320);
+}
+function updateStats() {
+  document.getElementById('statVisited').textContent=visitedCount;
+  document.getElementById('statEdges').textContent=edgeCount;
+  document.getElementById('statBack').textContent=backCount;
+  document.getElementById('statTime').textContent=currentTime;
+  document.getElementById('stepCount').textContent=`${stepIndex} / ${steps.length}`;
+}
+function setStatus(s){document.getElementById('statusEl').textContent=s;}
+
+function addHistRow(st) {
+  const body=document.getElementById('histBody');
+  const all=body.querySelectorAll('tr'); if(all.length>=25)body.removeChild(all[0]);
+  body.querySelectorAll('tr.cur').forEach(r=>r.classList.remove('cur'));
+  const tr=document.createElement('tr'); tr.classList.add('cur');
+  const etC={tree:'et-tree',back:'et-back',forward:'et-forward',cross:'et-cross'};
+  const etL=st.etype?`<span class="et ${etC[st.etype]||''}">${st.etype.toUpperCase()}</span>`:'—';
+  const dVal=st.node&&nodeD[st.node]!==undefined?nodeD[st.node]:'—';
+  const fVal=st.node&&nodeF[st.node]!==undefined?nodeF[st.node]:'—';
+  const detail=st.action==='discover'?`d[${st.node}]=${dVal}`:
+                st.action==='finish' ?`f[${st.node}]=${fVal}`:
+                st.etype||st.action||'';
+  tr.innerHTML=`<td>${stepIndex}</td><td>${st.action||'—'}</td><td><b>${st.node||'—'}</b></td><td>${etL}</td><td>${dVal}</td><td>${fVal}</td><td>${detail.slice(0,50)}</td>`;
+  const idx=stepIndex;
+  tr.addEventListener('click',()=>jumpToStep(idx));
+  body.appendChild(tr);
+  body.parentElement.scrollTop=body.parentElement.scrollHeight;
+  document.getElementById('histCount').textContent=`(${body.querySelectorAll('tr').length} rows — click to jump)`;
+}
+
+function jumpToStep(idx) {
+  pauseAnim(); resetVisualState();
+  document.getElementById('histBody').innerHTML='';
+  for(let i=0;i<idx&&i<steps.length;i++) applyStepSilent(steps[i]);
+  stepIndex=idx;
+  if(steps[idx-1]){
+    const st=steps[idx-1];
+    drawGraph();drawParen();updateStack();updateTopo();updateStats();
+    highlightLine(st.codeLine); showExplain(st);
+  }
+}
+
+function applyStepSilent(st) {
+  nodeColors=st.nodeColors;nodeD=st.nodeD;nodeF=st.nodeF;edgeTypes=st.edgeTypes;
+  activeNode=st.activeNode;activeEdge=st.activeEdge;callStack=st.callStack;
+  topoOrder=st.topoOrder;hasCycle=st.hasCycle;dpDist=st.dpDist;currentTime=st.time;
+  visitedCount=Object.values(nodeColors).filter(c=>c!=='white').length;
+  edgeCount=Object.keys(edgeTypes).length;
+  backCount=Object.values(edgeTypes).filter(t=>t==='back').length;
+}
+
+function resetVisualState() {
+  nodeColors={};nodeD={};nodeF={};edgeTypes={};
+  activeNode=null;activeEdge=null;callStack=[];topoOrder=[];
+  hasCycle=false;dpDist={};currentTime=0;
+  visitedCount=0;edgeCount=0;backCount=0;
+  document.getElementById('cycleAlert').classList.remove('show');
+  document.getElementById('histBody').innerHTML='';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PLAYBACK CONTROLS
+// ═══════════════════════════════════════════════════════════
+function buildSteps() {
+  if(!Object.keys(graph).length){alert('Load a graph first.');return;}
+  pauseAnim();resetVisualState();stepIndex=0;
+  steps=generateSteps(); setStatus('Ready');
+  updateStats();drawGraph();drawParen();updateStack();updateTopo();
+  highlightLine(0);
+  document.getElementById('explStep').textContent=`0 / ${steps.length}`;
+  showExplainMsg(`<b>🎓 ${steps.length} steps generated.</b> Click <b>Step</b> to advance one at a time, or <b>Play</b> to animate. Hover any pseudocode line ⓘ for a detailed explanation tooltip.`);
+  document.getElementById('explChips').innerHTML='';
+}
+
+function stepOnce() {
+  if(!steps.length){buildSteps();return;}
+  if(stepIndex>=steps.length){setStatus('Done');return;}
+  applyStep(steps[stepIndex]); stepIndex++; updateStats();
+  setStatus(stepIndex>=steps.length?'Done':'Stepping');
+}
+
+function stepBack() {
+  if(!steps.length||stepIndex<=0) return;
+  pauseAnim();
+  stepIndex = Math.max(0, stepIndex - 1);
+  // Replay from beginning up to stepIndex-1
+  resetVisualState();
+  document.getElementById('histBody').innerHTML='';
+  for(let i=0;i<stepIndex-1;i++) applyStepSilent(steps[i]);
+  stepIndex = stepIndex - 1;
+  if(stepIndex>=0 && steps[stepIndex]){
+    applyStep(steps[stepIndex]);
+    stepIndex++;
+  }
+  updateStats();
+  setStatus('Stepping');
+}
+
+function playAnim() {
+  if(!steps.length)buildSteps();
+  if(stepIndex>=steps.length){stepIndex=0;resetVisualState();document.getElementById('histBody').innerHTML='';}
+  setStatus('Playing');
+  const token=++playToken;
+  const delay=()=>Math.max(120,Math.round(800/speed));
+  function tick(){
+    if(playToken!==token||stepIndex>=steps.length){if(stepIndex>=steps.length)setStatus('Done');return;}
+    applyStep(steps[stepIndex]);stepIndex++;updateStats();
+    playTimer=setTimeout(tick,delay());
+  }
+  tick();
+}
+
+function pauseAnim(){playToken++;clearTimeout(playTimer);if(stepIndex>0&&stepIndex<steps.length)setStatus('Paused');}
+
+function resetAll() {
+  pauseAnim();steps=[];stepIndex=0;resetVisualState();updateStats();
+  document.getElementById('stepCount').textContent='0 / 0';
+  setStatus('Idle');drawGraph();drawParen();updateStack();updateTopo();
+  document.getElementById('histBody').innerHTML='';
+  document.getElementById('histCount').textContent='(click row to jump)';
+  document.getElementById('explStep').textContent='—';
+  document.getElementById('explChips').innerHTML='';
+  showExplainMsg('Click <b>Build Steps</b>, then <b>Step</b> or <b>Play</b> to see concrete, line-by-line explanations — actual node names, discovery/finish times, and edge classifications.');
+  highlightLine(0);
+}
+
+function updateSpeed(val) {
+  speed=parseFloat(val);
+  document.getElementById('speedLabel').textContent=speed.toFixed(2)+'×';
+  const pct=((speed-0.25)/(4-0.25))*100;
+  document.getElementById('speed').style.background=`linear-gradient(to right,rgba(192,132,252,0.6) ${pct}%,rgba(255,255,255,0.10) ${pct}%)`;
+}
+
+function setMode(m,btn) {
+  mode=m;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderPseudo();resetAll();
+}
+
+function switchVizTab(tab, btn) {
+  // Only affect the right-panel tab row (second .tabBar)
+  const rightCard = btn.closest('.card');
+  rightCard.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  rightCard.querySelectorAll('.viz-panel').forEach(p => p.classList.remove('active'));
+  const panel = document.getElementById('vp-' + tab);
+  if (panel) panel.classList.add('active');
+  // Trigger chart draw when switching to complexity tab
+  if (tab === 'complexity') drawGrowthChart(parseInt(document.getElementById('growthSlider').value));
+  if (tab === 'sorting')    drawTopoAnim(topoAnimStep);
+  if (tab === 'paradigm')   { rebuildDPTable(); renderDPTable(dpStep); }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════
+window.addEventListener('load',()=>{
+  loadPreset('dag',document.querySelector('.preset-btn'));
+  renderPseudo(); updateSpeed(1.0);
+  setTimeout(()=>{ drawGrowthChart(20); drawTopoAnim(0); rebuildDPTable(); }, 200);
+});
+window.addEventListener('resize',()=>{
+  if(Object.keys(graph).length) drawGraph();
+  drawGrowthChart(parseInt(document.getElementById('growthSlider').value));
+});
+
+// ═══════════════════════════════════════════════════════════
+//  COMPLEXITY TAB — GROWTH CHART
+// ═══════════════════════════════════════════════════════════
+function drawGrowthChart(maxV) {
+  const svg = document.getElementById('growthSvg');
+  if (!svg) return;
+  const W = svg.parentElement.offsetWidth - 28 || 560;
+  const H = 210;
+  const pad = {l:50,r:18,t:12,b:36};
+  const cW = W-pad.l-pad.r, cH = H-pad.t-pad.b;
+  const Vs = []; for(let v=2;v<=maxV;v++) Vs.push(v);
+  // Actual simulated ops (E ≈ 1.5V sparse)
+  const dfs   = Vs.map(v=>v+Math.floor(1.5*v));
+  const bfs   = Vs.map(v=>v+Math.floor(1.4*v));
+  const naive = Vs.map(v=>v*v);
+  // Theoretical O(V+E) curve — clean formula c*(V+1.5V) = 2.5V, c=1
+  const theory = Vs.map(v=>2.5*v);
+  const maxY  = Math.max(...naive)*1.05;
+  const scX = v => pad.l+(v-2)/(maxV-2)*cW;
+  const scY = y => pad.t+cH-Math.min(y,maxY)/maxY*cH;
+  let html = `<rect width="${W}" height="${H}" fill="transparent"/>`;
+  // Grid
+  for(let i=0;i<=4;i++){
+    const y=pad.t+i*cH/4, val=Math.round(maxY*(4-i)/4);
+    html+=`<line x1="${pad.l}" x2="${pad.l+cW}" y1="${y}" y2="${y}" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>`;
+    html+=`<text x="${pad.l-5}" y="${y+4}" text-anchor="end" fill="rgba(183,192,255,0.50)" font-size="10" font-family="ui-monospace,monospace">${val>999?Math.round(val/100)/10+'k':val}</text>`;
+  }
+  const step=Math.max(1,Math.floor(Vs.length/8));
+  for(let i=0;i<Vs.length;i+=step) html+=`<text x="${scX(Vs[i])}" y="${H-6}" text-anchor="middle" fill="rgba(183,192,255,0.50)" font-size="10">${Vs[i]}</text>`;
+  html+=`<line x1="${pad.l}" x2="${pad.l}" y1="${pad.t}" y2="${pad.t+cH}" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>`;
+  html+=`<line x1="${pad.l}" x2="${pad.l+cW}" y1="${pad.t+cH}" y2="${pad.t+cH}" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>`;
+  // Theoretical O(V+E) dashed line — drawn first so it sits behind actual
+  const thPts=theory.map((y,i)=>`${scX(Vs[i])},${scY(y)}`).join(' ');
+  html+=`<polyline points="${thPts}" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-dasharray="6,3"/>`;
+  // Actual curves
+  const poly=(arr,col,sw)=>`<polyline points="${arr.map((y,i)=>`${scX(Vs[i])},${scY(y)}`).join(' ')}" fill="none" stroke="${col}" stroke-width="${sw}"/>`;
+  html+=poly(naive,'var(--c5)',2)+poly(bfs,'var(--c1)',2.5)+poly(dfs,'var(--c2)',2.5);
+  // End labels
+  const last=Vs.length-1;
+  html+=`<text x="${scX(Vs[last])+4}" y="${scY(dfs[last])+4}"    fill="var(--c2)" font-size="10" font-weight="700">DFS (actual)</text>`;
+  html+=`<text x="${scX(Vs[last])+4}" y="${scY(bfs[last])+12}"   fill="var(--c1)" font-size="10" font-weight="700">BFS</text>`;
+  html+=`<text x="${scX(Vs[last])+4}" y="${scY(naive[last])-4}"  fill="var(--c5)" font-size="10" font-weight="700">Naive O(V²)</text>`;
+  html+=`<text x="${scX(Vs[last])+4}" y="${scY(theory[last])+16}" fill="rgba(255,255,255,0.55)" font-size="10">O(V+E) theory</text>`;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.innerHTML = html;
+}
+function updateGrowthChart(val){
+  document.getElementById('growthNVal').textContent=val;
+  drawGrowthChart(parseInt(val));
+}
+
+// ═══════════════════════════════════════════════════════════
+//  COMPLEXITY TAB — WORST-CASE PRESETS
+// ═══════════════════════════════════════════════════════════
+const WC_PRESETS = {
+  path:{
+    adj:{A:['B'],B:['C'],C:['D'],D:['E'],E:['F'],F:[]},
+    pos:{A:[80,240],B:[210,240],C:[330,240],D:[450,240],E:[570,240],F:[690,240]},
+    explain:`<b>Path Graph — Maximum Stack Depth.</b> A linear chain A→B→C→D→E→F forces DFS to recurse V=6 levels deep. The entire call stack is occupied simultaneously — worst case for space O(V). Time is still Θ(V+E) = Θ(11).`
+  },
+  dense:{
+    adj:{A:['B','C','D'],B:['C','D'],C:['D'],D:[]},
+    pos:{A:[160,150],B:[360,80],C:[360,280],D:[580,150]},
+    explain:`<b>Dense DAG — Maximum Edge Count.</b> V=4 vertices, E=6 edges (near-complete). As V grows, a complete DAG has E = V(V−1)/2 = O(V²) edges — making DFS cost Θ(V²). Not the algorithm's fault; E is simply large.`
+  },
+  complete:{
+    adj:{A:['B','C','D'],B:['C','D'],C:['D'],D:['E'],E:[]},
+    pos:{A:[100,240],B:[230,120],C:[370,240],D:[510,120],E:[640,240]},
+    explain:`<b>Complete DAG — All Edge Types.</b> This graph produces tree edges, forward edges, and cross edges. DFS classifies every single edge using d/f timestamps, demonstrating all classification cases in one run.`
+  }
+};
+function loadWCPreset(key){
+  const p=WC_PRESETS[key]; if(!p)return;
+  document.querySelectorAll('.wc-btn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  graph=p.adj; positions={...p.pos};
+  document.getElementById('graphInput').value=Object.entries(graph).map(([k,v])=>`${k}: ${v.join(' ')}`).join('\n');
+  refreshStartSel(); resetAll(); drawGraph();
+  const exp=document.getElementById('wcExplain');
+  exp.style.display='block'; exp.innerHTML=p.explain;
+  // Switch to graph tab so student sees the loaded graph
+  const rightCard=document.getElementById('vp-graph').closest('.card');
+  rightCard.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  rightCard.querySelectorAll('.tab')[0].classList.add('active');
+  document.querySelectorAll('.viz-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('vp-graph').classList.add('active');
+  document.querySelector('.wrap').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SORTING TAB — TOPO ANIMATION
+// ═══════════════════════════════════════════════════════════
+const TOPO_NODES=['A','B','C','D','E','F'];
+const TOPO_EDGES=[['A','B'],['A','C'],['B','D'],['B','E'],['C','F'],['E','F']];
+const TOPO_FIN=['F','E','D','C','B','A'];
+let topoAnimStep=0, topoAnimTimer=null;
+
+function drawTopoAnim(step){
+  const svg=document.getElementById('topoAnimSvg');
+  if(!svg)return;
+  const pos={A:[70,65],B:[190,30],C:[190,100],D:[320,15],E:[320,55],F:[450,65]};
+  const finished=TOPO_FIN.slice(0,step);
+  let html='';
+  TOPO_EDGES.forEach(([u,v])=>{
+    const [x1,y1]=pos[u],[x2,y2]=pos[v];
+    const dx=x2-x1,dy=y2-y1,len=Math.sqrt(dx*dx+dy*dy);
+    const sx=x1+(dx/len)*20,sy=y1+(dy/len)*20,ex=x2-(dx/len)*20,ey=y2-(dy/len)*20;
+    const hi=step>0&&TOPO_FIN[step-1]===u;
+    html+=`<line x1="${sx}" y1="${sy}" x2="${ex}" y2="${ey}" stroke="${hi?'rgba(255,209,102,0.7)':'rgba(255,255,255,0.18)'}" stroke-width="${hi?2:1.5}" marker-end="url(#arr-default)"/>`;
+  });
+  TOPO_NODES.forEach(n=>{
+    const [cx,cy]=pos[n];
+    const done=finished.includes(n), cur=step>0&&TOPO_FIN[step-1]===n;
+    const fill=cur?'rgba(255,209,102,0.30)':done?'rgba(100,240,200,0.20)':'rgba(106,169,255,0.15)';
+    const stroke=cur?'var(--c3)':done?'var(--c2)':'rgba(106,169,255,0.55)';
+    html+=`<circle cx="${cx}" cy="${cy}" r="18" fill="${fill}" stroke="${stroke}" stroke-width="${cur?3:2}"/>`;
+    html+=`<text x="${cx}" y="${cy+5}" text-anchor="middle" font-size="12" font-weight="800" fill="${cur?'var(--c3)':done?'var(--c2)':'rgba(232,236,255,0.80)'}">${n}</text>`;
+    if(done){const ft=TOPO_FIN.indexOf(n)+1; html+=`<text x="${cx}" y="${cy-22}" text-anchor="middle" font-size="9" font-weight="700" fill="var(--c2)">f=${ft}</text>`;}
+  });
+  const rx=560;
+  html+=`<text x="${rx}" y="20" font-size="11" font-weight="700" fill="var(--muted)" font-family="ui-monospace,monospace">Topo Order (↓f):</text>`;
+  finished.forEach((n,i)=>{
+    const col=i===0?'var(--c3)':'var(--c2)';
+    html+=`<rect x="${rx+i*36}" y="28" width="30" height="22" rx="5" fill="${col==='var(--c3)'?'rgba(255,209,102,0.20)':'rgba(100,240,200,0.12)'}" stroke="${col}" stroke-width="1.5"/>`;
+    html+=`<text x="${rx+i*36+15}" y="44" text-anchor="middle" font-size="12" font-weight="800" fill="${col}">${n}</text>`;
+    if(i<finished.length-1) html+=`<text x="${rx+i*36+34}" y="44" fill="var(--muted)" font-size="11">→</text>`;
+  });
+  if(!step) html+=`<text x="${rx}" y="50" font-size="11" fill="rgba(183,192,255,0.40)" font-family="ui-monospace,monospace">(click Animate)</text>`;
+  svg.innerHTML=html;
+  const log=document.getElementById('topoAnimLog');
+  if(log){
+    if(!step) log.innerHTML='DFS finishes vertices in order F,E,D,C,B,A. Each finish event <b>prepends</b> the vertex to the result list.';
+    else { const cur=TOPO_FIN[step-1]; log.innerHTML=`Step ${step}: <b style="color:var(--c3)">${cur}</b> finished (f[${cur}]=${step}). Prepend → [<b>${finished.join(' → ')}</b>]`; }
+  }
+}
+function runTopoAnim(){
+  if(topoAnimTimer)clearInterval(topoAnimTimer);
+  topoAnimStep=0;
+  topoAnimTimer=setInterval(()=>{
+    topoAnimStep++;drawTopoAnim(topoAnimStep);
+    if(topoAnimStep>=TOPO_FIN.length)clearInterval(topoAnimTimer);
+  },700);
+}
+function resetTopoAnim(){
+  if(topoAnimTimer)clearInterval(topoAnimTimer);
+  topoAnimStep=0;drawTopoAnim(0);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PARADIGM TAB — DYNAMIC DP TABLE (built from active graph)
+// ═══════════════════════════════════════════════════════════
+let DP_STEPS=[], dpStep=0, dpTimer=null;
+let DP_NODES_CURRENT=[], DP_TOPO_CURRENT=[];
+
+function buildDPSteps(g, topoOrder, startNode) {
+  // Build DP steps dynamically from whatever graph is currently loaded
+  const nodes = Object.keys(g);
+  const steps = [];
+  const dist = {};
+  nodes.forEach(n => dist[n] = -Infinity);
+  if (startNode && dist[startNode] !== undefined) dist[startNode] = 0;
+  else if (nodes.length) dist[nodes[0]] = 0;
+
+  const src = Object.keys(dist).find(n => dist[n] === 0) || nodes[0];
+  steps.push({
+    dist:{...dist}, active:null, updated:null,
+    log:`Initialize: dist[${src}]=0, all others=−∞.`
+  });
+
+  for (const u of topoOrder) {
+    if (dist[u] === -Infinity) continue;
+    for (const v of (g[u]||[])) {
+      const nd = dist[u]+1, old = dist[v], imp = nd > old;
+      if (imp) dist[v] = nd;
+      steps.push({
+        dist:{...dist}, active:v, updated:imp?v:null, edge:`${u}→${v}`,
+        log: imp
+          ? `Relax <b>${u}→${v}</b>: dist[${u}]+1=${nd} > ${old===-Infinity?'−∞':old} → <b style="color:var(--c2)">dist[${v}] = ${nd}</b>`
+          : `Relax <b>${u}→${v}</b>: dist[${u}]+1=${nd} ≤ dist[${v}]=${old} → no update`
+      });
+    }
+    steps.push({
+      dist:{...dist}, active:null, updated:null, processing:u,
+      log:`Finished processing <b>${u}</b>. dist[${u}] = <b>${dist[u]}</b> is now final.`
+    });
+  }
+
+  const maxDist = Math.max(...Object.values(dist).filter(x=>x!==-Infinity));
+  steps.push({
+    dist:{...dist}, active:null, updated:null, done:true,
+    log:`<b>DP Complete!</b> Longest paths from ${src}: ${nodes.map(n=>`dist[${n}]=${dist[n]===-Infinity?'−∞':dist[n]}`).join(', ')}. Maximum = ${maxDist} edges.`
+  });
+
+  return steps;
+}
+
+function rebuildDPTable() {
+  const nodes = Object.keys(graph);
+  if (!nodes.length) return;
+  DP_NODES_CURRENT = nodes;
+
+  // Always compute a fresh topo order from the graph directly
+  // using Kahn's algorithm so it works even before DFS has been run
+  const inDeg = {}, adj = graph;
+  nodes.forEach(n => inDeg[n] = 0);
+  nodes.forEach(u => (adj[u]||[]).forEach(v => { if(inDeg[v]!==undefined) inDeg[v]++; }));
+  const queue = nodes.filter(n => inDeg[n]===0);
+  const topo = [];
+  while(queue.length) {
+    const u = queue.shift();
+    topo.push(u);
+    (adj[u]||[]).forEach(v => { if(--inDeg[v]===0) queue.push(v); });
+  }
+  // If topo is incomplete (cycle exists), fall back to node order
+  DP_TOPO_CURRENT = topo.length === nodes.length ? topo : [...nodes];
+
+  const src = document.getElementById('startNode').value || nodes[0];
+  DP_STEPS = buildDPSteps(graph, DP_TOPO_CURRENT, src);
+  dpStep = 0;
+  renderDPTable(0);
+}
+
+function renderDPTable(si){
+  if (!DP_STEPS.length) { rebuildDPTable(); return; }
+  const st = DP_STEPS[si] || DP_STEPS[0];
+  const nodes = DP_NODES_CURRENT.length ? DP_NODES_CURRENT : Object.keys(graph);
+  const head = document.getElementById('dpTblHead');
+  const body = document.getElementById('dpTblBody');
+  if(!head||!body) return;
+
+  const src = nodes.find(n => DP_STEPS[0]?.dist[n] === 0) || nodes[0];
+
+  // Count relaxations per node up to current step
+  const relaxCount = {};
+  for(let j=0; j<=si; j++){
+    if(DP_STEPS[j]?.edge){
+      const v = DP_STEPS[j].edge.split('→')[1];
+      if(v) relaxCount[v] = (relaxCount[v]||0)+1;
+    }
+  }
+
+  // ONE ROW PER VERTEX — updates in place each step
+  head.innerHTML = `<tr>
+    <th>Vertex</th>
+    <th>dist[ ]</th>
+    <th>Status</th>
+    <th>Note</th>
+  </tr>`;
+
+  body.innerHTML = nodes.map(n => {
+    const val = st.dist[n];
+    const isActive     = st.active === n;
+    const isUpdated    = st.updated === n;
+    const isProcessing = st.processing === n;
+    const isOverlap    = (relaxCount[n]||0) > 1 && isUpdated;
+    const isBest       = st.done && val === Math.max(...Object.values(st.dist).filter(x=>x!==-Infinity));
+    const isSrc        = n === src;
+
+    let cellCls = val === -Infinity ? 'dp-inf' : '';
+    let statusText = val === -Infinity ? 'Unreachable' : 'Computed';
+    let noteText = '';
+
+    if(isSrc && val === 0){ cellCls='dp-src'; statusText='Source'; noteText='Starting point'; }
+    if(isActive)          { cellCls='dp-active'; statusText='Being relaxed…'; }
+    if(isUpdated)         { cellCls= isOverlap?'dp-best':'dp-done'; statusText= isOverlap?'⚠ Updated (overlap)':'Just updated ✓'; }
+    if(isOverlap)           noteText='Reachable from multiple predecessors';
+    if(isProcessing)      { cellCls='dp-done'; statusText='Finalized ✓'; }
+    if(isBest)            { cellCls='dp-best'; statusText='Longest path! 🏆'; noteText='Maximum distance from source'; }
+
+    const display = val === -Infinity ? '−∞' : val;
+    const rowBg = (isActive||isUpdated||isProcessing) ? 'background:rgba(255,209,102,0.04)' : '';
+
+    return `<tr style="${rowBg}">
+      <td style="font-weight:700;color:var(--c1);font-size:13px">${n}</td>
+      <td class="${cellCls}" style="font-size:18px;font-weight:700;text-align:center">${display}${isOverlap?'*':''}</td>
+      <td style="font-size:11px;color:var(--muted)">${statusText}</td>
+      <td style="font-size:11px;color:var(--muted);font-style:italic">${noteText}</td>
+    </tr>`;
+  }).join('');
+
+  // Step log
+  let log = st.log || '—';
+  if(st.edge){
+    const v = st.edge.split('→')[1];
+    const rc = DP_STEPS.slice(0,si+1).filter(s=>s.edge&&s.edge.split('→')[1]===v).length;
+    if(v && rc > 1) log += ` <span style="color:var(--c6);font-weight:700">⚠ Overlapping subproblem — ${v} is reachable from multiple predecessors.</span>`;
+  }
+  document.getElementById('dpStepLog').innerHTML = log;
+  document.getElementById('dpStepCounter').textContent = `Step ${si} / ${DP_STEPS.length-1}`;
+}
+function dpNextStep(){if(dpStep<DP_STEPS.length-1){dpStep++;renderDPTable(dpStep);}}
+function dpPlayAll(){
+  if(dpTimer)clearInterval(dpTimer);
+  dpTimer=setInterval(()=>{
+    if(dpStep>=DP_STEPS.length-1){clearInterval(dpTimer);return;}
+    dpStep++;renderDPTable(dpStep);
+  },600);
+}
+function dpReset(){
+  if(dpTimer)clearInterval(dpTimer);
+  dpStep=0;
+  rebuildDPTable();
+}
+
+// FIX 3: sync DP table live with main animation
+function syncDPTableToStep(st) {
+  if(!st.dpDist || !Object.keys(st.dpDist).length) return;
+  // Rebuild if graph changed or steps empty
+  if(!DP_STEPS.length || DP_NODES_CURRENT.join(',') !== Object.keys(graph).join(',')) {
+    DP_NODES_CURRENT = Object.keys(graph);
+    DP_TOPO_CURRENT = topoOrder.length ? [...topoOrder] : [...Object.keys(graph)];
+    const src = document.getElementById('startNode').value || DP_NODES_CURRENT[0];
+    DP_STEPS = buildDPSteps(graph, DP_TOPO_CURRENT, src);
+  }
+  // Find matching step by dist state
+  let bestIdx = 0;
+  for(let i=0; i<DP_STEPS.length; i++){
+    const match = DP_NODES_CURRENT.every(n => {
+      const a = st.dpDist[n] === undefined ? -Infinity : st.dpDist[n];
+      return a === DP_STEPS[i].dist[n];
+    });
+    if(match) bestIdx = i;
+  }
+  dpStep = bestIdx;
+  renderDPTable(dpStep);
+}
+</script>
+</body>
+</html>
