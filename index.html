@@ -1090,7 +1090,10 @@ function drawGraph() {
     const [cx,cy]=px(u), color=nodeColors[u]||'white', isAct=activeNode===u;
     const fm={white:'rgba(106,169,255,0.15)',gray:'rgba(255,209,102,0.25)',black:'rgba(100,240,200,0.20)'};
     const sm={white:'rgba(106,169,255,0.55)',gray:'rgba(255,209,102,0.85)',black:'rgba(100,240,200,0.75)'};
-    const fill=isAct?'rgba(255,92,122,0.30)':fm[color], stroke=isAct?'#ff5c7a':sm[color], sw=isAct?3:2;
+    // Use the actual color state — red glow is an overlay, not a replacement
+    const fill   = fm[color] || fm.white;
+    const stroke = isAct ? '#ff5c7a' : sm[color] || sm.white;
+    const sw     = isAct ? 3 : 2;
     const g=document.createElementNS('http://www.w3.org/2000/svg','g');
     if(isAct){const gl=document.createElementNS('http://www.w3.org/2000/svg','circle');gl.setAttribute('cx',cx);gl.setAttribute('cy',cy);gl.setAttribute('r',R+8);gl.setAttribute('fill','rgba(255,92,122,0.10)');g.appendChild(gl);}
     const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
@@ -1100,7 +1103,7 @@ function drawGraph() {
     const lbl=document.createElementNS('http://www.w3.org/2000/svg','text');
     lbl.setAttribute('x',cx);lbl.setAttribute('y',cy+5);lbl.setAttribute('text-anchor','middle');
     lbl.setAttribute('font-size','14');lbl.setAttribute('font-weight','800');
-    lbl.setAttribute('fill',isAct?'#ff5c7a':color==='white'?'rgba(232,236,255,0.80)':'#fff');
+    lbl.setAttribute('fill', color==='white' ? 'rgba(232,236,255,0.80)' : '#fff');
     lbl.classList.add('gnode-text');lbl.textContent=u;g.appendChild(lbl);
     if(nodeD[u]!==undefined){
       const dt=document.createElementNS('http://www.w3.org/2000/svg','text');
