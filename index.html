@@ -154,6 +154,39 @@
     /* ── Right-panel tab views ── */
     .viz-panel{display:none;padding:0}
     .viz-panel.active{display:block}
+
+    /* ── Learn Tab ── */
+    .learn-wrap{padding:14px;display:flex;flex-direction:column;gap:16px}
+    .learn-section{background:rgba(0,0,0,0.18);border:1px solid rgba(255,255,255,0.08);border-radius:14px;overflow:hidden}
+    .learn-section-hdr{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;user-select:none}
+    .learn-section-hdr:hover{background:rgba(255,255,255,0.05)}
+    .learn-section-hdr h3{margin:0;font-size:13px;font-weight:700;color:var(--text)}
+    .learn-section-hdr span{font-size:14px;color:var(--muted);transition:transform 200ms}
+    .learn-section-hdr.open span{transform:rotate(180deg)}
+    .learn-section-body{padding:14px;display:none;font-size:12.5px;line-height:1.75;color:var(--muted)}
+    .learn-section-body.open{display:block}
+    .learn-section-body p{margin:0 0 10px}
+    .learn-section-body p:last-child{margin:0}
+    .learn-section-body b{color:var(--text)}
+    .learn-section-body code{font-family:ui-monospace,monospace;font-size:11.5px;background:rgba(255,255,255,0.07);border-radius:3px;padding:1px 5px;color:var(--c3)}
+    .learn-key{display:inline-block;padding:2px 9px;border-radius:6px;font-size:11px;font-weight:700;margin:2px 3px}
+    .learn-key.blue{background:rgba(106,169,255,0.15);color:#6aa9ff;border:1px solid rgba(106,169,255,0.25)}
+    .learn-key.yellow{background:rgba(255,209,102,0.15);color:var(--c3);border:1px solid rgba(255,209,102,0.25)}
+    .learn-key.green{background:rgba(100,240,200,0.15);color:var(--c2);border:1px solid rgba(100,240,200,0.25)}
+    .learn-key.red{background:rgba(255,92,122,0.15);color:var(--c5);border:1px solid rgba(255,92,122,0.25)}
+    .learn-glossary{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+    @media(max-width:980px){.learn-glossary{grid-template-columns:1fr}}
+    .learn-gloss-item{background:rgba(0,0,0,0.18);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:9px 12px}
+    .learn-gloss-item b{display:block;color:var(--c1);font-size:12px;margin-bottom:3px}
+    .learn-gloss-item span{font-size:11.5px;color:var(--muted);line-height:1.6}
+    .learn-worked{background:rgba(0,0,0,0.22);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:12px;margin:8px 0;font-family:ui-monospace,monospace;font-size:12px;line-height:1.9}
+    .learn-worked .step{color:var(--c3);font-weight:700}
+    .learn-worked .node-b{color:#6aa9ff;font-weight:700}
+    .learn-worked .node-y{color:var(--c3);font-weight:700}
+    .learn-worked .node-g{color:var(--c2);font-weight:700}
+    .learn-tip{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:rgba(192,132,252,0.07);border:1px solid rgba(192,132,252,0.18);border-radius:10px;margin-top:8px;font-size:12px;color:var(--muted);line-height:1.6}
+    .learn-tip .icon{font-size:16px;flex-shrink:0;margin-top:1px}
+    .learn-tip b{color:var(--text)}
     .viz-h3{margin:0 0 8px;font-size:13px;font-weight:700;color:var(--muted)}
     .module-banner{padding:11px 14px;margin:12px 14px 0;border-radius:12px;font-size:12.5px;line-height:1.65;border-left:3px solid}
     .module-banner.blue{border-color:var(--c1);background:rgba(192,132,252,0.07);color:var(--text)}
@@ -347,14 +380,279 @@ F:</textarea>
     <h2>Interactive Algorithm Explorer</h2>
 
     <!-- Right-panel tab bar -->
-    <div class="tabBar" style="grid-template-columns:repeat(4,1fr);padding:10px 14px 0">
-      <button class="tab active" onclick="switchVizTab('graph',this)">Graph</button>
+    <div class="tabBar" style="grid-template-columns:repeat(5,1fr);padding:10px 14px 0">
+      <button class="tab active" onclick="switchVizTab('learn',this)">📖 Learn</button>
+      <button class="tab"        onclick="switchVizTab('graph',this)">Graph</button>
       <button class="tab"        onclick="switchVizTab('complexity',this)">Complexity</button>
       <button class="tab"        onclick="switchVizTab('sorting',this)">Sorting Role</button>
       <button class="tab"        onclick="switchVizTab('paradigm',this)">DP Paradigm</button>
     </div>
 
-    <!-- ── TAB 1: Graph ── -->
+    <!-- ── TAB 0: Learn ── -->
+    <div class="viz-panel active" id="vp-learn">
+      <div class="learn-wrap">
+
+        <div class="module-banner blue" style="margin:0">
+          📖 <b>Start here.</b> Everything you need to understand DFS from scratch — no textbook, no searching. Read each section in order, then use the other tabs to watch it happen live.
+        </div>
+
+        <!-- HOW TO USE THIS TOOL -->
+        <div class="learn-section">
+          <div class="learn-section-hdr open" onclick="toggleLearn(this)">
+            <h3>🛠 How to Use This Tool</h3>
+            <span>▾</span>
+          </div>
+          <div class="learn-section-body open">
+            <p><b>Left panel</b> — controls the algorithm. Right panel — visualizes and teaches.</p>
+            <p>
+              <b>Step 1:</b> Choose a mode from the left tabs — <b>DFS</b>, <b>Topo Sort</b>, <b>Cycle Detection</b>, or <b>Longest Path</b>.<br>
+              <b>Step 2:</b> Pick a preset graph or type your own in the adjacency list box.<br>
+              <b>Step 3:</b> Click <b>Build Steps</b> — this generates the full animation.<br>
+              <b>Step 4:</b> Click <b>Step ▶</b> one at a time to go slowly, or <b>Play</b> to watch it animate automatically. Use the speed slider to control how fast.<br>
+              <b>Step 5:</b> Watch the <b>pseudocode panel</b> — the active line highlights as each step runs. Hover any line for a detailed tooltip.<br>
+              <b>Step 6:</b> Read the <b>Step Explanation box</b> — it tells you exactly what happened and why, with actual node names and timestamps.
+            </p>
+            <p><b>◀ Back</b> lets you go backwards one step. Click any row in the <b>Step History table</b> to jump to that exact moment.</p>
+            <p>The <b>right panel tabs</b> are: <b>Graph</b> (main animation), <b>Complexity</b> (charts and analysis), <b>Sorting Role</b> (how topo sort works), <b>DP Paradigm</b> (the dynamic programming table).</p>
+            <div class="learn-tip"><span class="icon">💡</span><span><b>Best way to learn:</b> Read a section here, then immediately switch to the Graph tab and run the matching preset to see it live. Come back here if anything is unclear.</span></div>
+          </div>
+        </div>
+
+        <!-- SECTION 1: What is a Graph? -->
+        <div class="learn-section">
+          <div class="learn-section-hdr open" onclick="toggleLearn(this)">
+            <h3>① What is a Graph?</h3>
+            <span>▾</span>
+          </div>
+          <div class="learn-section-body open">
+            <p>A <b>graph</b> is a set of <b>vertices</b> (the circles) connected by <b>edges</b> (the arrows). Think of it like a city map — each circle is a location and each arrow is a one-way road between them.</p>
+            <p>A <b>directed graph</b> means edges have direction. An arrow from A to B means you can travel A→B, but not necessarily B→A.</p>
+            <p>A <b>DAG</b> (Directed Acyclic Graph) is a directed graph with <b>no cycles</b> — you can never follow arrows and end up back where you started. DAGs are required for topological sort and longest path because cycles would make those problems unsolvable.</p>
+            <div class="learn-tip"><span class="icon">💡</span><span><b>Real life DAG:</b> University courses. BCS101 → BCS201 → BCS309. You must take each prerequisite before the next course. You can't take a course that requires itself — no cycles.</span></div>
+            <p style="margin-top:10px"><b>➜ Try it:</b> Switch to <b>Graph tab</b> → load <b>Simple DAG</b>. Notice how all arrows point "downward" — you can never follow arrows in a loop.</p>
+          </div>
+        </div>
+
+        <!-- SECTION 2: What problem does DFS solve? -->
+        <div class="learn-section">
+          <div class="learn-section-hdr" onclick="toggleLearn(this)">
+            <h3>② What Problem Does DFS Solve?</h3>
+            <span>▾</span>
+          </div>
+          <div class="learn-section-body">
+            <p>DFS answers one question: <b>how do I explore every vertex in a graph systematically?</b> The strategy is: go as deep as possible down one path, hit a dead end, backtrack, try the next path.</p>
+            <p>Imagine exploring a maze. You pick a corridor and keep walking until you hit a wall. Then you go back to the last junction and try a different corridor. You never revisit a corridor you've already been down. DFS does exactly this on a graph.</p>
+            <p>From this one simple exploration strategy, <b>three powerful problems are solved automatically</b> — just by observing different things during the same run:</p>
+            <p>
+              <b style="color:var(--c1)">① Topological Sort</b> — In what order should I complete tasks that depend on each other? Example: which courses can I take this semester given my prerequisites?<br><br>
+              <b style="color:var(--c2)">② Cycle Detection</b> — Is there a circular dependency that makes ordering impossible? Example: if Course A requires B and B requires A, no student can start either.<br><br>
+              <b style="color:var(--c6)">③ Longest Path (DP)</b> — What is the longest chain of dependent tasks? Example: what is the minimum time a project can take, no matter how many people you add?
+            </p>
+            <div class="learn-tip"><span class="icon">💡</span><span><b>Key insight:</b> All three problems come from the same single DFS run. You don't need three different algorithms — just one run with different things recorded along the way.</span></div>
+            <p style="margin-top:10px"><b>➜ Try it:</b> Switch between the four left-panel mode tabs and run each preset to see all three applications.</p>
+          </div>
+        </div>
+
+        <!-- SECTION 3: The Three Colors -->
+        <div class="learn-section">
+          <div class="learn-section-hdr" onclick="toggleLearn(this)">
+            <h3>③ The Three Colors — The Entire Algorithm State</h3>
+            <span>▾</span>
+          </div>
+          <div class="learn-section-body">
+            <p>DFS tracks every vertex with exactly one color at all times. These three colors <b>are</b> the algorithm — everything DFS can do flows from this coloring scheme:</p>
+            <p>
+              <span class="learn-key blue">BLUE — Unvisited</span><br>
+              DFS hasn't reached this vertex yet. Every vertex starts blue. When DFS sees a blue neighbor, it recurses into it — that's a tree edge.<br><br>
+              <span class="learn-key yellow">YELLOW — On the Stack</span><br>
+              DFS is currently <em>inside</em> this vertex. We entered it, but we haven't finished exploring all its neighbors yet. The vertex is on the call stack right now. When DFS finds an edge pointing to a yellow vertex, that means we're currently inside that vertex and there's a path leading back to it — that's a <b>cycle</b>.<br><br>
+              <span class="learn-key green">GREEN — Finished</span><br>
+              DFS is completely done with this vertex. Every path reachable from it has been fully explored. When a vertex turns green, it gets prepended to the topological order.<br><br>
+              <span class="learn-key red">RED border — Active (visual only)</span><br>
+              Just highlights which vertex is being processed at this exact animation step. This is not part of the DFS algorithm — it's only there to help you follow along.
+            </p>
+            <p><b>Why three colors and not two?</b> With only "visited" and "unvisited," you can't tell the difference between a vertex you're currently sitting inside versus one you finished long ago. That distinction is everything. A yellow (currently inside) neighbor = back edge = cycle. A green (finished) neighbor = safe, no cycle. Two colors destroys cycle detection entirely.</p>
+            <div class="learn-tip"><span class="icon">💡</span><span>Simple rule: <b>Blue → recurse in. Green → move on. Yellow → CYCLE!</b></span></div>
+            <p style="margin-top:10px"><b>➜ Try it:</b> Graph tab → Simple DAG → Build Steps → Step slowly. Watch vertices turn blue → yellow → green as DFS explores.</p>
+          </div>
+        </div>
+
+        <!-- SECTION 4: Discovery and Finish Times -->
+        <div class="learn-section">
+          <div class="learn-section-hdr" onclick="toggleLearn(this)">
+            <h3>④ Discovery & Finish Times</h3>
+            <span>▾</span>
+          </div>
+          <div class="learn-section-body">
+            <p>DFS keeps a global timer that increments every time a vertex is discovered or finished. Each vertex gets exactly two timestamps:</p>
+            <p><b>d[u] — Discovery time:</b> Stamped when u turns <span class="learn-key yellow">YELLOW</span>. This is the moment DFS first enters u. You'll see it appear above the vertex in the animation as the left number.</p>
+            <p><b>f[u] — Finish time:</b> Stamped when u turns <span class="learn-key green">GREEN</span>. This is the moment DFS has finished every path reachable from u. You'll see it as the right number above the vertex, shown as d[u]/f[u].</p>
+            <p>The interval <code>[d[u], f[u]]</code> represents the entire period when u was yellow — open when we entered, closed when we finished. The <b>Parenthesis Theorem timeline</b> at the bottom of the Graph tab shows all these intervals as horizontal bars.</p>
+            <p><b>The Parenthesis Theorem:</b> For any two vertices u and v, their intervals are either completely nested (one inside the other) or completely separate — they <em>never</em> partially overlap. This is a mathematical guarantee from how DFS works — it always fully finishes one branch before starting another.</p>
+            <p><b>Why finish times give topological sort:</b> For any edge (u→v) in a DAG, when DFS follows u→v it enters v and must fully finish v before returning to u. So f[v] &lt; f[u] always. Sort all vertices by <b>decreasing finish time</b> and every u comes before every v for every edge. That's topological sort.</p>
+            <div class="learn-tip"><span class="icon">💡</span><span><b>Watch the timeline:</b> After running DFS on Simple DAG, look at the Parenthesis bars. A's bar contains B's bar which contains D's bar — perfectly nested. They never cross.</span></div>
+            <p style="margin-top:10px"><b>➜ Try it:</b> Graph tab → Simple DAG → Build Steps → Play → watch the d/f numbers appear above each vertex and the timeline bars grow.</p>
+          </div>
+        </div>
+
+        <!-- SECTION 5: Edge Types -->
+        <div class="learn-section">
+          <div class="learn-section-hdr" onclick="toggleLearn(this)">
+            <h3>⑤ Edge Types — What DFS Finds on Every Edge</h3>
+            <span>▾</span>
+          </div>
+          <div class="learn-section-body">
+            <p>Every time DFS examines an edge (u→v), it classifies it based on v's color. The classification appears as a letter label on the edge in the animation:</p>
+            <p>
+              <b style="color:var(--edge-tree)">T — Tree Edge</b> — v is <span class="learn-key blue">BLUE</span>. This is the first time we've reached v. DFS recurses into v. Tree edges form the DFS spanning forest — the skeleton of the exploration.<br><br>
+              <b style="color:var(--edge-back)">B — Back Edge</b> — v is <span class="learn-key yellow">YELLOW</span>. v is an ancestor currently on the stack. There's already a path from v down to u in the DFS tree, and this edge closes a loop. <b>Back edge = cycle.</b> This is the only edge type that indicates a cycle in a directed graph.<br><br>
+              <b style="color:var(--edge-forward)">F — Forward Edge</b> — v is <span class="learn-key green">GREEN</span> and d[u] &lt; d[v]. u was discovered before v, meaning v is a descendant of u in the DFS tree — just not a direct child.<br><br>
+              <b style="color:var(--edge-cross)">C — Cross Edge</b> — v is <span class="learn-key green">GREEN</span> and d[u] &gt; d[v]. v was discovered in a completely different branch before u was even started.
+            </p>
+            <div class="learn-tip"><span class="icon">💡</span><span><b>The only dangerous one is Back (B).</b> Tree, Forward, and Cross edges are all safe. One back edge = cycle = topological sort impossible.</span></div>
+            <p style="margin-top:10px"><b>➜ Try it:</b> Graph tab → Has Cycle → Build Steps → Step until you see a red curved arrow (back edge) and the cycle alert appears.</p>
+          </div>
+        </div>
+
+        <!-- SECTION 6: Topological Sort -->
+        <div class="learn-section">
+          <div class="learn-section-hdr" onclick="toggleLearn(this)">
+            <h3>⑥ Application 1 — Topological Sort</h3>
+            <span>▾</span>
+          </div>
+          <div class="learn-section-body">
+            <p><b>Problem:</b> Given a set of tasks with dependencies (task A must be done before B), find a valid ordering that respects all dependencies.</p>
+            <p><b>Real life:</b> Getting dressed — socks before shoes, underwear before pants. You need an order where every dependency is respected. That's topological sort.</p>
+            <p><b>How DFS produces it automatically:</b> Every time a vertex turns <span class="learn-key green">GREEN</span>, DFS <b>prepends</b> it to a result list (adds it to the front). At the end, the list is sorted in decreasing finish-time order.</p>
+            <p><b>Why this works:</b> For any edge (u→v), v always finishes before u (because DFS must fully explore v before returning to u). Prepending means v ends up later in the list than u. So u comes before v in the final order — which is exactly what we need.</p>
+            <p><b>When it fails:</b> If the graph has a cycle (a back edge), topological sort is impossible. You can't order tasks when A depends on B and B depends on A — there's no valid starting point. DFS catches this automatically.</p>
+            <div class="learn-tip"><span class="icon">💡</span><span><b>Watch the strip:</b> The topological order strip at the bottom-left fills up as vertices turn green. Each new green vertex appears at the front of the strip.</span></div>
+            <p style="margin-top:10px"><b>➜ Try it:</b> Left panel → Topo Sort mode → Simple DAG → Build Steps → Play. Watch the topo strip fill up. Then try Has Cycle — watch it fail.</p>
+          </div>
+        </div>
+
+        <!-- SECTION 7: Cycle Detection -->
+        <div class="learn-section">
+          <div class="learn-section-hdr" onclick="toggleLearn(this)">
+            <h3>⑦ Application 2 — Cycle Detection</h3>
+            <span>▾</span>
+          </div>
+          <div class="learn-section-body">
+            <p><b>Problem:</b> Does this graph contain a cycle — a path that loops back to where it started?</p>
+            <p><b>Real life:</b> University prerequisites — if Course A requires Course B and Course B requires Course A, no student can ever start. Operating systems — if Process A waits for Process B and B waits for A, that's a deadlock. Both are cycles that need to be detected.</p>
+            <p><b>How DFS detects cycles:</b> The rule is completely mechanical. When DFS examines edge (u→v):</p>
+            <p>— If v is <span class="learn-key yellow">YELLOW</span>, it's currently on the stack. There's already a DFS path from v down to u, and this edge closes a loop back to v. <b>Cycle confirmed.</b></p>
+            <p>— If v is <span class="learn-key blue">BLUE</span> or <span class="learn-key green">GREEN</span>, no cycle from this edge.</p>
+            <p>DFS never needs to "look for" cycles explicitly — the coloring scheme catches them automatically as a side effect of exploration.</p>
+            <div class="learn-tip"><span class="icon">💡</span><span><b>One back edge is enough.</b> The moment DFS finds any edge pointing to a yellow vertex, it flags a cycle. The ⚠ alert appears and the topo strip stops updating.</span></div>
+            <p style="margin-top:10px"><b>➜ Try it:</b> Left panel → Cycle Det. mode → Has Cycle → Build Steps → Step slowly. Stop when you see the red curved back edge and the cycle alert.</p>
+          </div>
+        </div>
+
+        <!-- SECTION 8: Longest Path -->
+        <div class="learn-section">
+          <div class="learn-section-hdr" onclick="toggleLearn(this)">
+            <h3>⑧ Application 3 — Longest Path (Dynamic Programming)</h3>
+            <span>▾</span>
+          </div>
+          <div class="learn-section-body">
+            <p><b>Problem:</b> Find the longest path from a source vertex to every other vertex in a DAG.</p>
+            <p><b>Real life:</b> Project management. You have tasks with dependencies — task C can only start after A and B. The <b>critical path</b> (longest chain of dependent tasks) tells you the minimum time the entire project can take, no matter how many people you add.</p>
+            <p><b>Why not just try all paths?</b> On a general graph with cycles, this is NP-hard — exponential time. On a DAG, the topological order DFS produces makes it solvable in linear time using Dynamic Programming.</p>
+            <p><b>How it works:</b></p>
+            <p>1. Run DFS to get the topological order. This guarantees every predecessor of any vertex is processed before that vertex.<br>
+            2. Initialize dist[source] = 0, all others = −∞ (unreachable).<br>
+            3. For each vertex u in topo order, for each edge (u→v): if dist[u]+1 &gt; dist[v], update dist[v]. This is called <b>relaxation</b>.<br>
+            4. At the end, dist[v] = length of the longest path from source to v.</p>
+            <p><b>Why DP works here:</b> When we process u in topo order, dist[u] is already final — all predecessors of u have been processed. So every decision is based on correct, complete values. This is the core DP guarantee: <b>solve each subproblem once, in the right order, reuse the answer</b>.</p>
+            <p><b>Overlapping subproblems:</b> Vertex C in the Longest Path graph is reachable from both A and B. Without DP, you'd recompute paths to C exponentially many times. DP stores the answer once and reuses it — watch for the purple★ cells in the DP table.</p>
+            <div class="learn-tip"><span class="icon">💡</span><span><b>Watch both panels together:</b> Run Longest Path in the Graph tab, then switch to DP Paradigm tab. Click Reset then Play All to watch the table fill in topo order, one vertex at a time.</span></div>
+            <p style="margin-top:10px"><b>➜ Try it:</b> Left panel → Longest Path mode → Longest Path preset → Build Steps → Play. Then switch to DP Paradigm tab → Reset → Play All.</p>
+          </div>
+        </div>
+
+        <!-- SECTION 9: Worked Example -->
+        <div class="learn-section">
+          <div class="learn-section-hdr" onclick="toggleLearn(this)">
+            <h3>⑨ Worked Example — Full DFS Trace</h3>
+            <span>▾</span>
+          </div>
+          <div class="learn-section-body">
+            <p>Graph: <b>A→B, A→C, B→D, B→E, C→F, E→F</b>. DFS starts at A. Follow along step by step:</p>
+            <div class="learn-worked">
+              <div><span class="step">Step 1:</span>  Discover <span class="node-y">A</span>. d[A]=1. Stack: [A]. Color: Blue→Yellow.</div>
+              <div><span class="step">Step 2:</span>  Examine A→B. B is <span class="node-b">BLUE</span> → <b style="color:var(--edge-tree)">Tree Edge</b>. Recurse into B.</div>
+              <div><span class="step">Step 3:</span>  Discover <span class="node-y">B</span>. d[B]=2. Stack: [A,B].</div>
+              <div><span class="step">Step 4:</span>  Examine B→D. D is <span class="node-b">BLUE</span> → <b style="color:var(--edge-tree)">Tree Edge</b>. Recurse into D.</div>
+              <div><span class="step">Step 5:</span>  Discover <span class="node-y">D</span>. d[D]=3. Stack: [A,B,D]. D has no neighbors.</div>
+              <div><span class="step">Step 6:</span>  Finish <span class="node-g">D</span>. f[D]=4. Interval [3,4]. Topo: [D].</div>
+              <div><span class="step">Step 7:</span>  Back to B. Examine B→E. E is <span class="node-b">BLUE</span> → <b style="color:var(--edge-tree)">Tree Edge</b>. Discover <span class="node-y">E</span>. d[E]=5.</div>
+              <div><span class="step">Step 8:</span>  Examine E→F. F is <span class="node-b">BLUE</span> → <b style="color:var(--edge-tree)">Tree Edge</b>. Discover <span class="node-y">F</span>. d[F]=6. F has no neighbors.</div>
+              <div><span class="step">Step 9:</span>  Finish <span class="node-g">F</span>. f[F]=7. Interval [6,7]. Topo: [F,D].</div>
+              <div><span class="step">Step 10:</span> Back to E. E has no more neighbors. Finish <span class="node-g">E</span>. f[E]=8. Topo: [E,F,D].</div>
+              <div><span class="step">Step 11:</span> Back to B. B has no more neighbors. Finish <span class="node-g">B</span>. f[B]=9. Topo: [B,E,F,D].</div>
+              <div><span class="step">Step 12:</span> Back to A. Examine A→C. C is <span class="node-b">BLUE</span> → <b style="color:var(--edge-tree)">Tree Edge</b>. Discover <span class="node-y">C</span>. d[C]=10.</div>
+              <div><span class="step">Step 13:</span> Examine C→F. F is <span class="node-g">GREEN</span>. d[C]=10 &gt; d[F]=6 → <b style="color:var(--edge-cross)">Cross Edge</b>. No recursion.</div>
+              <div><span class="step">Step 14:</span> C has no more neighbors. Finish <span class="node-g">C</span>. f[C]=11. Topo: [C,B,E,F,D].</div>
+              <div><span class="step">Step 15:</span> Back to A. A has no more neighbors. Finish <span class="node-g">A</span>. f[A]=12. Topo: [<b>A→C→B→E→F→D</b>].</div>
+            </div>
+            <p style="margin-top:8px">Every dependency arrow points forward in this order — A before C, A before B, B before E, B before D, E before F. Valid topological sort. ✓</p>
+            <div class="learn-tip"><span class="icon">🎯</span><span><b>Now verify it yourself.</b> Graph tab → Simple DAG → Build Steps → Step slowly, one click at a time. Each step here matches exactly one click there.</span></div>
+          </div>
+        </div>
+
+        <!-- SECTION 10: Common Mistakes -->
+        <div class="learn-section">
+          <div class="learn-section-hdr" onclick="toggleLearn(this)">
+            <h3>⑩ Common Mistakes — Don't Fall for These</h3>
+            <span>▾</span>
+          </div>
+          <div class="learn-section-body">
+            <div class="learn-glossary" style="grid-template-columns:1fr">
+              <div class="learn-gloss-item"><b>❌ "Vertices are added to the end of the topo list when they finish"</b><span>Wrong. They are <b>prepended</b> — added to the <em>front</em>. The last vertex to finish ends up first in the list. This is what gives you decreasing finish-time order.</span></div>
+              <div class="learn-gloss-item"><b>❌ "Any edge to a visited vertex means a cycle"</b><span>Wrong. Only an edge to a <span class="learn-key yellow">YELLOW</span> vertex means a cycle. Edges to <span class="learn-key green">GREEN</span> vertices are forward or cross edges — completely safe.</span></div>
+              <div class="learn-gloss-item"><b>❌ "DFS and BFS have different time complexities"</b><span>Wrong. Both are Θ(V+E). The difference is what they produce — DFS gives finish times, edge classification, and topo sort. BFS gives shortest paths in unweighted graphs.</span></div>
+              <div class="learn-gloss-item"><b>❌ "Topological sort works on any graph"</b><span>Wrong. Topological sort only works on DAGs. Any cycle makes it impossible — there's no valid starting point when tasks depend on each other in a loop.</span></div>
+              <div class="learn-gloss-item"><b>❌ "Longest path is easy on any graph"</b><span>Wrong. On a general graph with cycles, longest path is NP-hard (exponential time). It's only solvable efficiently on a DAG, where topological order lets us use DP in linear time.</span></div>
+              <div class="learn-gloss-item"><b>❌ "The DP table computes distances during DFS"</b><span>Wrong. The DP distances only appear <em>after</em> DFS completely finishes. They can't be computed mid-DFS because we need every predecessor to be finalized first — which only happens once DFS is done.</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 11: Glossary -->
+        <div class="learn-section">
+          <div class="learn-section-hdr" onclick="toggleLearn(this)">
+            <h3>⑪ Glossary — Every Term Used in This Tool</h3>
+            <span>▾</span>
+          </div>
+          <div class="learn-section-body">
+            <div class="learn-glossary">
+              <div class="learn-gloss-item"><b>Vertex (node)</b><span>A circle in the graph. Represents a task, location, or state.</span></div>
+              <div class="learn-gloss-item"><b>Edge</b><span>An arrow connecting two vertices. In a directed graph, direction matters.</span></div>
+              <div class="learn-gloss-item"><b>DAG</b><span>Directed Acyclic Graph. A directed graph with no cycles. Required for topological sort and longest path DP.</span></div>
+              <div class="learn-gloss-item"><b>Cycle</b><span>A path that starts and ends at the same vertex by following directed edges. Makes topological sort impossible.</span></div>
+              <div class="learn-gloss-item"><b>DFS Tree</b><span>The spanning tree formed by tree edges during DFS. One tree per connected component, together forming the DFS forest.</span></div>
+              <div class="learn-gloss-item"><b>Call Stack</b><span>The list of vertices DFS is currently inside — all yellow vertices in order of discovery. The left panel shows this in real time.</span></div>
+              <div class="learn-gloss-item"><b>d[u] — Discovery time</b><span>Timer value when vertex u first turned yellow. Shown as the left number above each vertex.</span></div>
+              <div class="learn-gloss-item"><b>f[u] — Finish time</b><span>Timer value when u turned green. Shown as the right number. For any edge (u→v) in a DAG, f[v] &lt; f[u].</span></div>
+              <div class="learn-gloss-item"><b>Topological Sort</b><span>An ordering where every edge (u→v) has u before v. Produced by sorting vertices in decreasing finish-time order. Only valid on DAGs.</span></div>
+              <div class="learn-gloss-item"><b>Back Edge</b><span>An edge (u→v) where v is yellow — currently on the stack. Signals a cycle. The only dangerous edge type.</span></div>
+              <div class="learn-gloss-item"><b>Tree Edge</b><span>An edge (u→v) where v is blue — first discovery. DFS recurses into v. Forms the DFS spanning tree.</span></div>
+              <div class="learn-gloss-item"><b>Forward Edge</b><span>An edge (u→v) where v is green and d[u] &lt; d[v]. v is a non-child descendant of u.</span></div>
+              <div class="learn-gloss-item"><b>Cross Edge</b><span>An edge (u→v) where v is green and d[u] &gt; d[v]. v was in a different branch discovered before u.</span></div>
+              <div class="learn-gloss-item"><b>Relaxation</b><span>Updating dist[v] = dist[u]+1 if the path through u gives a longer route to v. The core DP step.</span></div>
+              <div class="learn-gloss-item"><b>Overlapping Subproblem</b><span>When the same vertex is reachable from multiple predecessors. DP handles this by storing and reusing the answer instead of recomputing.</span></div>
+              <div class="learn-gloss-item"><b>Optimal Substructure</b><span>The longest path to v is built from optimal paths to its predecessors. Allows DP to work correctly.</span></div>
+              <div class="learn-gloss-item"><b>Θ(V+E)</b><span>The tight time complexity of DFS. Visits each vertex once (V operations) and each edge once (E operations). Linear — as fast as reading the graph itself.</span></div>
+              <div class="learn-gloss-item"><b>π[u] — Parent pointer</b><span>Records which vertex discovered u. Set when a tree edge is found. Together all parent pointers form the DFS tree.</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="learn-tip"><span class="icon">🚀</span><span><b>Ready to start?</b> Switch to the <b>Graph tab</b>, load <b>Simple DAG</b>, click <b>Build Steps</b> then <b>Step ▶</b> slowly. Hover any pseudocode line for a tooltip. Come back here anytime something is unclear.</span></div>
+
+      </div>
+    </div>
     <div class="viz-panel active" id="vp-graph">
       <div class="viz">
         <div class="legend">
@@ -1454,11 +1752,18 @@ function switchVizTab(tab, btn) {
   if (tab === 'complexity') drawGrowthChart(parseInt(document.getElementById('growthSlider').value));
   if (tab === 'sorting')    drawTopoAnim(topoAnimStep);
   if (tab === 'paradigm')   { rebuildDPTable(); renderDPTable(dpStep); }
+  if (tab === 'graph')      { drawGraph(); drawParen(); }
 }
 
 // ═══════════════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════════════
+function toggleLearn(hdr) {
+  hdr.classList.toggle('open');
+  const body = hdr.nextElementSibling;
+  body.classList.toggle('open');
+}
+
 window.addEventListener('load',()=>{
   loadPreset('dag',document.querySelector('.preset-btn'));
   renderPseudo(); updateSpeed(1.0);
